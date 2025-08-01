@@ -238,47 +238,47 @@ if run_analysis:
                         else:
                             st.error("Failed to generate sample data")
                             return
-            else:
-                st.success(f"✅ Collected {len(data)} records for {symbol}")
-                
-                # Display stock data
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    st.subheader("�� Stock Data Summary")
-                    st.write(f"**Symbol:** {symbol}")
-                    st.write(f"**Period:** {selected_period}")
-                    st.write(f"**Records:** {len(data)}")
-                    st.write(f"**Date Range:** {data.index[0].strftime('%Y-%m-%d')} to {data.index[-1].strftime('%Y-%m-%d')}")
+                else:
+                    st.success(f"✅ Collected {len(data)} records for {symbol}")
                     
-                    # Price statistics
-                    price_stats = {
-                        "Min Price": f"${data['Close'].min():.2f}",
-                        "Max Price": f"${data['Close'].max():.2f}",
-                        "Mean Price": f"${data['Close'].mean():.2f}",
-                        "Current Price": f"${data['Close'].iloc[-1]:.2f}"
-                    }
-                    st.write("**Price Statistics:**")
-                    for stat, value in price_stats.items():
-                        st.write(f"• {stat}: {value}")
-                
-                with col2:
-                    # Price chart
-                    fig = go.Figure()
-                    fig.add_trace(go.Scatter(
-                        x=data.index,
-                        y=data['Close'],
-                        mode='lines',
-                        name='Close Price',
-                        line=dict(color='blue')
-                    ))
-                    fig.update_layout(
-                        title=f"{symbol} Stock Price",
-                        xaxis_title="Date",
-                        yaxis_title="Price ($)",
-                        height=300
-                    )
-                    st.plotly_chart(fig, use_container_width=True)
+                    # Display stock data
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        st.subheader("�� Stock Data Summary")
+                        st.write(f"**Symbol:** {symbol}")
+                        st.write(f"**Period:** {selected_period}")
+                        st.write(f"**Records:** {len(data)}")
+                        st.write(f"**Date Range:** {data.index[0].strftime('%Y-%m-%d')} to {data.index[-1].strftime('%Y-%m-%d')}")
+                        
+                        # Price statistics
+                        price_stats = {
+                            "Min Price": f"${data['Close'].min():.2f}",
+                            "Max Price": f"${data['Close'].max():.2f}",
+                            "Mean Price": f"${data['Close'].mean():.2f}",
+                            "Current Price": f"${data['Close'].iloc[-1]:.2f}"
+                        }
+                        st.write("**Price Statistics:**")
+                        for stat, value in price_stats.items():
+                            st.write(f"• {stat}: {value}")
+                    
+                    with col2:
+                        # Price chart
+                        fig = go.Figure()
+                        fig.add_trace(go.Scatter(
+                            x=data.index,
+                            y=data['Close'],
+                            mode='lines',
+                            name='Close Price',
+                            line=dict(color='blue')
+                        ))
+                        fig.update_layout(
+                            title=f"{symbol} Stock Price",
+                            xaxis_title="Date",
+                            yaxis_title="Price ($)",
+                            height=300
+                        )
+                        st.plotly_chart(fig, use_container_width=True)
         
         with st.spinner("Engineering features..."):
             # Step 2: Feature Engineering
@@ -292,13 +292,6 @@ if run_analysis:
                 if len(features) < 50:
                     st.warning(f"⚠️ Only {len(features)} data points available. Need at least 50 for reliable predictions.")
                     st.info("💡 **Tip**: Try a longer time period (2-5 years) for better results.")
-            else:
-                st.error("❌ Could not create features from the data.")
-                st.info("💡 **Possible causes:**")
-                st.info("• Insufficient data points")
-                st.info("• Missing price/volume data")
-                st.info("• Data format issues")
-                return
                 
                 # Display feature info
                 st.subheader("🔧 Technical Indicators")
@@ -314,7 +307,12 @@ if run_analysis:
                         st.write("**Recent Technical Indicators:**")
                         st.dataframe(indicator_data, use_container_width=True)
             else:
-                st.error("Could not create features from the data.")
+                st.error("❌ Could not create features from the data.")
+                st.info("💡 **Possible causes:**")
+                st.info("• Insufficient data points")
+                st.info("• Missing price/volume data")
+                st.info("• Data format issues")
+                return
         
         with st.spinner("Training machine learning model..."):
             # Step 3: Model Training
