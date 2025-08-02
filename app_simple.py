@@ -672,5 +672,3 @@ st.markdown("""
     <p>Advanced AI-powered stock prediction for smarter trading decisions</p>
 </div>
 """, unsafe_allow_html=True)
-      
-  
