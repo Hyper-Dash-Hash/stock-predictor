@@ -39,6 +39,14 @@ st.markdown("""
         margin-bottom: 3rem;
         box-shadow: 0 15px 35px rgba(0,0,0,0.1);
     }
+    .hero-section h1 {
+        color: white !important;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    .hero-section p {
+        color: white !important;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
     .feature-card {
         background: white;
         padding: 2rem;
@@ -46,6 +54,13 @@ st.markdown("""
         margin: 1rem 0;
         box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         border-left: 5px solid #667eea;
+    }
+    .feature-card h3 {
+        color: #333 !important;
+        font-weight: bold;
+    }
+    .feature-card p {
+        color: #555 !important;
     }
     .cta-button {
         background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
@@ -152,6 +167,17 @@ st.markdown("""
         box-shadow: 0 3px 10px rgba(0,0,0,0.1);
         margin: 0 0.5rem;
     }
+    .stat-item h2 {
+        color: #333 !important;
+        font-size: 2rem;
+    }
+    .stat-item h3 {
+        color: #333 !important;
+        font-weight: bold;
+    }
+    .stat-item p {
+        color: #555 !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -256,8 +282,8 @@ if st.session_state.current_page == 'home':
     with col2:
         st.markdown("""
         <div style="text-align: center; padding: 2rem;">
-            <h2>Ready to Start Predicting?</h2>
-            <p style="font-size: 1.1rem; margin-bottom: 2rem;">
+            <h2 style="color: #333;">Ready to Start Predicting?</h2>
+            <p style="font-size: 1.1rem; margin-bottom: 2rem; color: #555;">
                 Get instant AI-powered stock predictions and trading recommendations
             </p>
         </div>
@@ -270,8 +296,8 @@ if st.session_state.current_page == 'home':
     st.markdown("---")
     st.markdown("""
     <div style="text-align: center; padding: 2rem; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); border-radius: 10px; color: white;">
-        <h3>Built with ❤️ using Advanced AI & Machine Learning</h3>
-        <p>Professional-grade stock prediction for smarter trading decisions</p>
+        <h3 style="color: white !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">Built with ❤️ using Advanced AI & Machine Learning</h3>
+        <p style="color: white !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">Professional-grade stock prediction for smarter trading decisions</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -302,7 +328,7 @@ elif st.session_state.current_page == 'predictor':
         symbol = st.text_input("📊 Stock Symbol", value="AAPL").upper()
         
         # Popular symbols with better formatting
-        st.markdown("** Popular Symbols:**")
+        st.markdown("**�� Popular Symbols:**")
         popular_symbols = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "META", "NVDA", "NFLX", "AMD", "INTC"]
         cols = st.columns(2)
         for i, sym in enumerate(popular_symbols):
@@ -312,10 +338,10 @@ elif st.session_state.current_page == 'predictor':
         # Time period with icons
         st.markdown("**⏰ Time Period:**")
         period_options = {
-            " 6 Months": "6mo",
+            "�� 6 Months": "6mo",
             "📅 1 Year": "1y", 
             "📅 2 Years": "2y",
-            " 5 Years": "5y"
+            "📅 5 Years": "5y"
         }
         selected_period = st.selectbox("Select Period", list(period_options.keys()))
         period = period_options[selected_period]
@@ -325,7 +351,7 @@ elif st.session_state.current_page == 'predictor':
         model_type = st.selectbox("Choose Model", ["Random Forest", "LSTM (Coming Soon)"])
         
         # Demo mode with better description
-        demo_mode = st.checkbox(" Demo Mode", help="Use sample data when API is rate limited")
+        demo_mode = st.checkbox("�� Demo Mode", help="Use sample data when API is rate limited")
         
         # API Status with styling
         if not demo_mode:
@@ -380,7 +406,7 @@ elif st.session_state.current_page == 'predictor':
                         return None
                 else:
                     st.error(f"Error fetching data for {symbol}: {error_msg}")
-                    st.info(" **Try:** Different symbol or check spelling")
+                    st.info("�� **Try:** Different symbol or check spelling")
                     return None
         
         return None
@@ -705,7 +731,7 @@ elif st.session_state.current_page == 'predictor':
                             st.markdown("""
                             <div class="prediction-card">
                                 <h3>📊 Next Day Prediction</h3>
-                                <h2>""" + ("📈 UP" if next_day_prediction == 1 else " DOWN") + """</h2>
+                                <h2>""" + ("📈 UP" if next_day_prediction == 1 else "�� DOWN") + """</h2>
                                 <p>""" + f"{prediction_prob.max():.1%} confidence" + """</p>
                             </div>
                             """, unsafe_allow_html=True)
@@ -721,7 +747,7 @@ elif st.session_state.current_page == 'predictor':
                         with col3:
                             st.markdown(f"""
                             <div class="metric-card">
-                                <h3> Predicted Price</h3>
+                                <h3>�� Predicted Price</h3>
                                 <h2>${predicted_price:.2f}</h2>
                                 <p>{predicted_return:+.2%}</p>
                             </div>
@@ -785,7 +811,7 @@ elif st.session_state.current_page == 'predictor':
                     st.error("Could not make predictions. Model training failed.")
             else:
                 st.error("❌ Could not train model. Insufficient data or features.")
-                st.info(" **Common causes:**")
+                st.info("�� **Common causes:**")
                 st.info("• Less than 50 data points available")
                 st.info("• Too many missing values in features")
                 st.info("• All features are constant (no variation)")
@@ -818,18 +844,18 @@ elif st.session_state.current_page == 'predictor':
         
         - 📊 **Data Collection**: Downloads historical stock data from Yahoo Finance
         - 🔧 **Feature Engineering**: Creates technical indicators (RSI, MACD, etc.)
-        - **Machine Learning**: Trains a Random Forest model to predict price movements
+        - �� **Machine Learning**: Trains a Random Forest model to predict price movements
         - 🔮 **Price Predictions**: Forecasts next-day stock prices and price direction
         - 💡 **Trading Recommendations**: Provides BUY/SELL/HOLD advice based on predictions
         - 📈 **Performance Analysis**: Shows model accuracy and feature importance
         
         ## 📊 Technical Indicators Used
         
-        - ** Moving Averages**: SMA (5, 20, 50), EMA (12, 26)
-        - **⚡ Momentum**: RSI (14), MACD
-        - ** Volatility**: Bollinger Bands, ATR
-        - **📈 Volume**: On-Balance Volume
-        - **💰 Price Action**: Returns, Log Returns
+        - 📈 **Moving Averages**: SMA (5, 20, 50), EMA (12, 26)
+        - ⚡ **Momentum**: RSI (14), MACD
+        - 📊 **Volatility**: Bollinger Bands, ATR
+        - 📈 **Volume**: On-Balance Volume
+        - 💰 **Price Action**: Returns, Log Returns
         
         ## 🎯 Understanding Predictions
         
