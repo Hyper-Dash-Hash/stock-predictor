@@ -16,7 +16,7 @@ import random
 # Page configuration
 st.set_page_config(
     page_title="AI Stock Predictor Pro",
-    page_icon="��",
+    page_icon="🚀",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -27,117 +27,318 @@ if 'current_page' not in st.session_state:
 if 'watchlist' not in st.session_state:
     st.session_state.watchlist = []
 if 'dark_mode' not in st.session_state:
-    st.session_state.dark_mode = False
+    st.session_state.dark_mode = True  # Default to dark mode for NASA style
 if 'prediction_history' not in st.session_state:
     st.session_state.prediction_history = {}
 
-# Enhanced CSS with dark mode support
-def get_css(dark_mode=False):
+# NASA-Style CSS with perfect contrast and stunning visuals
+def get_nasa_css(dark_mode=True):
     if dark_mode:
         return """
         <style>
+            /* NASA Dark Theme */
             .main {
-                background-color: #1a1a1a;
+                background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
                 color: #ffffff;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
             .stApp {
-                background-color: #1a1a1a;
+                background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
             }
             .css-1d391kg {
-                background-color: #2d2d2d;
+                background: rgba(26, 26, 46, 0.9);
+                backdrop-filter: blur(10px);
             }
-            .hero-section {
+            
+            /* Hero Section with Parallax Effect */
+            .nasa-hero {
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                padding: 4rem 2rem;
-                border-radius: 20px;
+                background-image: 
+                    radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                    radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+                padding: 6rem 2rem;
+                border-radius: 25px;
                 text-align: center;
                 color: white;
-                margin-bottom: 3rem;
-                box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+                margin-bottom: 4rem;
+                box-shadow: 
+                    0 20px 40px rgba(0,0,0,0.3),
+                    0 0 100px rgba(102, 126, 234, 0.2);
+                position: relative;
+                overflow: hidden;
             }
-            .feature-card {
-                background: #2d2d2d;
-                padding: 2rem;
-                border-radius: 15px;
-                margin: 1rem 0;
-                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-                border-left: 5px solid #667eea;
-                color: white;
+            .nasa-hero::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="1" fill="white" opacity="0.3"/><circle cx="80" cy="40" r="0.5" fill="white" opacity="0.5"/><circle cx="40" cy="80" r="0.8" fill="white" opacity="0.4"/></svg>') repeat;
+                animation: float 20s infinite linear;
             }
+            @keyframes float {
+                0% { transform: translateY(0px); }
+                100% { transform: translateY(-100px); }
+            }
+            
+            /* Feature Cards with Glass Morphism */
+            .nasa-card {
+                background: rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(20px);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                padding: 2.5rem;
+                border-radius: 20px;
+                margin: 1.5rem 0;
+                box-shadow: 
+                    0 8px 32px rgba(0, 0, 0, 0.3),
+                    0 0 0 1px rgba(255, 255, 255, 0.1);
+                transition: all 0.3s ease;
+                position: relative;
+                overflow: hidden;
+            }
+            .nasa-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 
+                    0 15px 45px rgba(0, 0, 0, 0.4),
+                    0 0 0 1px rgba(255, 255, 255, 0.2);
+            }
+            .nasa-card h3 {
+                color: #ffffff !important;
+                font-weight: bold;
+                font-size: 1.4rem;
+                margin-bottom: 1rem;
+                text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            }
+            .nasa-card p {
+                color: #e0e0e0 !important;
+                font-size: 1.1rem;
+                line-height: 1.6;
+            }
+            
+            /* Prediction Cards */
             .prediction-card {
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                padding: 2rem;
+                border-radius: 20px;
+                color: white;
+                margin: 1rem 0;
+                text-align: center;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+            }
+            
+            /* Timeframe Cards */
+            .timeframe-card {
+                background: rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(20px);
                 padding: 1.5rem;
                 border-radius: 15px;
                 color: white;
                 margin: 1rem 0;
                 text-align: center;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                box-shadow: 0 8px 25px rgba(0,0,0,0.2);
             }
+            
+            /* Watchlist Items */
             .watchlist-item {
-                background: #2d2d2d;
+                background: rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(20px);
                 padding: 1rem;
-                border-radius: 10px;
+                border-radius: 15px;
                 margin: 0.5rem 0;
-                border-left: 3px solid #667eea;
+                border-left: 4px solid #667eea;
                 color: white;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
             }
-            .timeframe-card {
-                background: #2d2d2d;
-                padding: 1rem;
-                border-radius: 10px;
-                margin: 0.5rem 0;
+            
+            /* Stats Section */
+            .stats-section {
+                background: rgba(255, 255, 255, 0.05);
+                backdrop-filter: blur(20px);
+                padding: 3rem;
+                border-radius: 25px;
+                margin: 2rem 0;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            
+            /* CTA Button */
+            .nasa-cta {
+                background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
                 color: white;
-                text-align: center;
+                padding: 1.5rem 3rem;
+                border-radius: 50px;
+                font-weight: bold;
+                font-size: 1.3rem;
+                box-shadow: 0 10px 30px rgba(86, 171, 47, 0.4);
+                transition: all 0.3s ease;
+                border: none;
+                cursor: pointer;
+            }
+            .nasa-cta:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 15px 40px rgba(86, 171, 47, 0.6);
+            }
+            
+            /* Scroll Animations */
+            .scroll-fade {
+                opacity: 0;
+                transform: translateY(30px);
+                animation: fadeInUp 0.8s ease forwards;
+            }
+            @keyframes fadeInUp {
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            
+            /* Floating Elements */
+            .floating {
+                animation: floating 3s ease-in-out infinite;
+            }
+            @keyframes floating {
+                0%, 100% { transform: translateY(0px); }
+                50% { transform: translateY(-10px); }
             }
         </style>
         """
     else:
         return """
         <style>
-            .hero-section {
+            /* NASA Light Theme */
+            .main {
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 50%, #dee2e6 100%);
+                color: #2c3e50;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            }
+            .stApp {
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 50%, #dee2e6 100%);
+            }
+            .css-1d391kg {
+                background: rgba(255, 255, 255, 0.9);
+                backdrop-filter: blur(10px);
+            }
+            
+            /* Hero Section */
+            .nasa-hero {
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                padding: 4rem 2rem;
-                border-radius: 20px;
+                background-image: 
+                    radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                    radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+                padding: 6rem 2rem;
+                border-radius: 25px;
                 text-align: center;
                 color: white;
-                margin-bottom: 3rem;
-                box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+                margin-bottom: 4rem;
+                box-shadow: 
+                    0 20px 40px rgba(0,0,0,0.2),
+                    0 0 100px rgba(102, 126, 234, 0.3);
+                position: relative;
+                overflow: hidden;
             }
-            .feature-card {
-                background: white;
-                padding: 2rem;
-                border-radius: 15px;
-                margin: 1rem 0;
-                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-                border-left: 5px solid #667eea;
+            
+            /* Feature Cards */
+            .nasa-card {
+                background: rgba(255, 255, 255, 0.9);
+                backdrop-filter: blur(20px);
+                border: 1px solid rgba(102, 126, 234, 0.2);
+                padding: 2.5rem;
+                border-radius: 20px;
+                margin: 1.5rem 0;
+                box-shadow: 
+                    0 8px 32px rgba(0, 0, 0, 0.1),
+                    0 0 0 1px rgba(102, 126, 234, 0.1);
+                transition: all 0.3s ease;
             }
+            .nasa-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 
+                    0 15px 45px rgba(0, 0, 0, 0.15),
+                    0 0 0 1px rgba(102, 126, 234, 0.2);
+            }
+            .nasa-card h3 {
+                color: #2c3e50 !important;
+                font-weight: bold;
+                font-size: 1.4rem;
+                margin-bottom: 1rem;
+            }
+            .nasa-card p {
+                color: #495057 !important;
+                font-size: 1.1rem;
+                line-height: 1.6;
+            }
+            
+            /* Prediction Cards */
             .prediction-card {
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                padding: 1.5rem;
-                border-radius: 15px;
+                padding: 2rem;
+                border-radius: 20px;
                 color: white;
                 margin: 1rem 0;
                 text-align: center;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             }
-            .watchlist-item {
-                background: white;
-                padding: 1rem;
-                border-radius: 10px;
-                margin: 0.5rem 0;
-                border-left: 3px solid #667eea;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            }
+            
+            /* Timeframe Cards */
             .timeframe-card {
-                background: white;
-                padding: 1rem;
-                border-radius: 10px;
-                margin: 0.5rem 0;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                background: rgba(255, 255, 255, 0.9);
+                backdrop-filter: blur(20px);
+                padding: 1.5rem;
+                border-radius: 15px;
+                color: #2c3e50;
+                margin: 1rem 0;
                 text-align: center;
+                border: 1px solid rgba(102, 126, 234, 0.2);
+                box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            }
+            
+            /* Watchlist Items */
+            .watchlist-item {
+                background: rgba(255, 255, 255, 0.9);
+                backdrop-filter: blur(20px);
+                padding: 1rem;
+                border-radius: 15px;
+                margin: 0.5rem 0;
+                border-left: 4px solid #667eea;
+                color: #2c3e50;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            }
+            
+            /* Stats Section */
+            .stats-section {
+                background: rgba(255, 255, 255, 0.8);
+                backdrop-filter: blur(20px);
+                padding: 3rem;
+                border-radius: 25px;
+                margin: 2rem 0;
+                border: 1px solid rgba(102, 126, 234, 0.2);
+            }
+            
+            /* CTA Button */
+            .nasa-cta {
+                background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+                color: white;
+                padding: 1.5rem 3rem;
+                border-radius: 50px;
+                font-weight: bold;
+                font-size: 1.3rem;
+                box-shadow: 0 10px 30px rgba(86, 171, 47, 0.4);
+                transition: all 0.3s ease;
+                border: none;
+                cursor: pointer;
+            }
+            .nasa-cta:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 15px 40px rgba(86, 171, 47, 0.6);
             }
         </style>
         """
 
-st.markdown(get_css(st.session_state.dark_mode), unsafe_allow_html=True)
+st.markdown(get_nasa_css(st.session_state.dark_mode), unsafe_allow_html=True)
 
 # Navigation function
 def navigate_to(page):
@@ -426,91 +627,133 @@ def remove_from_watchlist(symbol):
 
 # Home Page
 if st.session_state.current_page == 'home':
-    # Hero Section
+    # Hero Section with NASA styling
     st.markdown("""
-    <div class="hero-section">
-        <h1 style="font-size: 3.5rem; margin-bottom: 1rem;">�� AI Stock Predictor Pro</h1>
-        <p style="font-size: 1.5rem; margin-bottom: 2rem;">
-            Advanced AI predictions with multiple timeframes, interactive charts, and portfolio tracking
+    <div class="nasa-hero floating">
+        <h1 style="font-size: 4rem; margin-bottom: 1.5rem; text-shadow: 0 4px 8px rgba(0,0,0,0.5);">🚀 AI Stock Predictor Pro</h1>
+        <p style="font-size: 1.8rem; margin-bottom: 2rem; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+            Mission Control for Your Investment Strategy
         </p>
-        <p style="font-size: 1.1rem; opacity: 0.9;">
-            The most comprehensive stock prediction platform powered by machine learning
+        <p style="font-size: 1.3rem; opacity: 0.9; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">
+            Advanced AI predictions with multiple timeframes, interactive charts, and portfolio tracking
         </p>
     </div>
     """, unsafe_allow_html=True)
     
-    # Dark mode toggle
+    # Theme toggle with NASA styling
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        if st.button("🌙 Toggle Dark Mode" if not st.session_state.dark_mode else "☀️ Toggle Light Mode"):
+        if st.button("🌙 Mission Control Mode" if not st.session_state.dark_mode else "☀️ Daylight Mode", 
+                    key="theme_toggle", use_container_width=True):
             st.session_state.dark_mode = not st.session_state.dark_mode
             st.rerun()
     
-    # Features Section
-    st.markdown("### ✨ New Pro Features")
+    # Features Section with NASA cards
+    st.markdown("### 🛰️ Mission Capabilities")
     
     col1, col2 = st.columns(2)
     
     with col1:
         st.markdown("""
-        <div class="feature-card">
-            <h3 style="color: #333 !important; font-weight: bold;">📊 Multi-Timeframe Predictions</h3>
-            <p style="color: #555 !important;">Predict 1 day, 3 days, and 1 week ahead with confidence intervals</p>
+        <div class="nasa-card scroll-fade">
+            <h3>📊 Multi-Timeframe Predictions</h3>
+            <p>Predict 1 day, 3 days, and 1 week ahead with confidence intervals</p>
         </div>
         """, unsafe_allow_html=True)
         
         st.markdown("""
-        <div class="feature-card">
-            <h3 style="color: #333 !important; font-weight: bold;">�� Interactive Charts</h3>
-            <p style="color: #555 !important;">Zoom, pan, and explore technical indicators on interactive price charts</p>
+        <div class="nasa-card scroll-fade">
+            <h3>📈 Interactive Charts</h3>
+            <p>Zoom, pan, and explore technical indicators on interactive price charts</p>
         </div>
         """, unsafe_allow_html=True)
         
         st.markdown("""
-        <div class="feature-card">
-            <h3 style="color: #333 !important; font-weight: bold;">⭐ Watchlist</h3>
-            <p style="color: #555 !important;">Save and track multiple stocks in your personalized watchlist</p>
+        <div class="nasa-card scroll-fade">
+            <h3>⭐ Watchlist</h3>
+            <p>Save and track multiple stocks in your personalized watchlist</p>
         </div>
         """, unsafe_allow_html=True)
     
     with col2:
         st.markdown("""
-        <div class="feature-card">
-            <h3 style="color: #333 !important; font-weight: bold;">🌙 Dark Mode</h3>
-            <p style="color: #555 !important;">Switch between light and dark themes for comfortable viewing</p>
+        <div class="nasa-card scroll-fade">
+            <h3>🌙 Dark Mode</h3>
+            <p>Switch between light and dark themes for comfortable viewing</p>
         </div>
         """, unsafe_allow_html=True)
         
         st.markdown("""
-        <div class="feature-card">
-            <h3 style="color: #333 !important; font-weight: bold;">�� Advanced Analytics</h3>
-            <p style="color: #555 !important;">Comprehensive technical indicators and risk assessment</p>
+        <div class="nasa-card scroll-fade">
+            <h3>🎯 Advanced Analytics</h3>
+            <p>Comprehensive technical indicators and risk assessment</p>
         </div>
         """, unsafe_allow_html=True)
         
         st.markdown("""
-        <div class="feature-card">
-            <h3 style="color: #333 !important; font-weight: bold;">📊 Performance Tracking</h3>
-            <p style="color: #555 !important;">Track prediction accuracy and model performance over time</p>
+        <div class="nasa-card scroll-fade">
+            <h3>📊 Performance Tracking</h3>
+            <p>Track prediction accuracy and model performance over time</p>
         </div>
         """, unsafe_allow_html=True)
     
-    # CTA Section
+    # Stats Section with NASA styling
+    st.markdown("### 📊 Mission Statistics")
+    
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.markdown("""
+        <div class="stats-section">
+            <h2 style="text-align: center; color: #667eea; font-size: 2.5rem;">🚀</h2>
+            <h3 style="text-align: center; margin: 0;">AI-Powered</h3>
+            <p style="text-align: center; margin: 0;">Advanced ML algorithms</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("""
+        <div class="stats-section">
+            <h2 style="text-align: center; color: #667eea; font-size: 2.5rem;">⚡</h2>
+            <h3 style="text-align: center; margin: 0;">Real-Time</h3>
+            <p style="text-align: center; margin: 0;">Live market data</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown("""
+        <div class="stats-section">
+            <h2 style="text-align: center; color: #667eea; font-size: 2.5rem;">🎯</h2>
+            <h3 style="text-align: center; margin: 0;">Accurate</h3>
+            <p style="text-align: center; margin: 0;">High prediction accuracy</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col4:
+        st.markdown("""
+        <div class="stats-section">
+            <h2 style="text-align: center; color: #667eea; font-size: 2.5rem;">💎</h2>
+            <h3 style="text-align: center; margin: 0;">Professional</h3>
+            <p style="text-align: center; margin: 0;">Institutional-grade analysis</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # CTA Section with NASA styling
     st.markdown("---")
     
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
         st.markdown("""
-        <div style="text-align: center; padding: 2rem;">
-            <h2 style="color: #333;">Ready to Experience Pro Features?</h2>
-            <p style="font-size: 1.1rem; margin-bottom: 2rem; color: #555;">
+        <div style="text-align: center; padding: 3rem;">
+            <h2 style="color: #2c3e50; margin-bottom: 1rem;">Ready to Launch?</h2>
+            <p style="font-size: 1.2rem; margin-bottom: 2rem; color: #495057;">
                 Access advanced AI predictions, interactive charts, and portfolio management
             </p>
         </div>
         """, unsafe_allow_html=True)
         
-        if st.button("�� Launch Pro Predictor", type="primary", use_container_width=True):
+        if st.button("🚀 Launch Mission Control", type="primary", use_container_width=True, key="launch_btn"):
             navigate_to('predictor')
 
 # Predictor Page
@@ -519,14 +762,14 @@ elif st.session_state.current_page == 'predictor':
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
-        if st.button("�� Back to Home", use_container_width=True):
+        if st.button("🏠 Back to Mission Control", use_container_width=True):
             navigate_to('home')
     
-    # Header
+    # Header with NASA styling
     st.markdown("""
-    <div class="hero-section">
-        <h1>�� AI Stock Predictor Pro</h1>
-        <p style="font-size: 1.2rem; margin-top: 0.5rem;">
+    <div class="nasa-hero">
+        <h1>📈 AI Stock Predictor Pro</h1>
+        <p style="font-size: 1.3rem; margin-top: 0.5rem;">
             Advanced predictions with multiple timeframes and interactive analytics
         </p>
     </div>
@@ -534,7 +777,7 @@ elif st.session_state.current_page == 'predictor':
     
     # Sidebar
     with st.sidebar:
-        st.markdown("### ⚙️ Settings")
+        st.markdown("### ⚙️ Mission Settings")
         
         # Stock symbol
         symbol = st.text_input("📊 Stock Symbol", value="AAPL").upper()
@@ -550,7 +793,7 @@ elif st.session_state.current_page == 'predictor':
         # Time period
         st.markdown("**⏰ Time Period:**")
         period_options = {
-            "�� 6 Months": "6mo",
+            "📅 6 Months": "6mo",
             "📅 1 Year": "1y", 
             "📅 2 Years": "2y",
             "📅 5 Years": "5y"
@@ -582,7 +825,7 @@ elif st.session_state.current_page == 'predictor':
         
         # Run analysis
         st.markdown("---")
-        run_analysis = st.button("🚀 Run Advanced Analysis", type="primary", use_container_width=True)
+        run_analysis = st.button("🚀 Launch Analysis", type="primary", use_container_width=True)
 
     # Main content
     if run_analysis:
@@ -687,14 +930,14 @@ elif st.session_state.current_page == 'predictor':
     # Information section
     else:
         st.markdown("""
-        ## �� Pro Features Guide
+        ## 🚀 Mission Control Guide
         
         ### 📊 Multi-Timeframe Predictions
         - **1 Day**: Short-term price movement prediction
         - **3 Days**: Medium-term trend analysis
         - **7 Days**: Weekly outlook with confidence intervals
         
-        ### �� Interactive Charts
+        ### 📈 Interactive Charts
         - **Zoom & Pan**: Explore price data in detail
         - **Technical Indicators**: Overlay moving averages and Bollinger Bands
         - **Candlestick View**: Professional trading chart format
