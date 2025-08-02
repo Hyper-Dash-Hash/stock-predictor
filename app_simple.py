@@ -222,7 +222,7 @@ if run_analysis:
                     st.success("✅ Using sample data for demonstration")
                 else:
                     st.error("Failed to generate sample data")
-                    return
+                    st.stop()
             else:
                 data = get_stock_data(symbol, period=period)
                 
@@ -237,7 +237,9 @@ if run_analysis:
                             st.success("✅ Using sample data for demonstration")
                         else:
                             st.error("Failed to generate sample data")
-                            return
+                            st.stop()
+                    else:
+                        st.stop()
                 else:
                     st.success(f"✅ Collected {len(data)} records for {symbol}")
                     
@@ -312,7 +314,7 @@ if run_analysis:
                 st.info("• Insufficient data points")
                 st.info("• Missing price/volume data")
                 st.info("• Data format issues")
-                return
+                st.stop()
         
         with st.spinner("Training machine learning model..."):
             # Step 3: Model Training
@@ -504,3 +506,5 @@ else:
 # Footer
 st.markdown("---")
 st.markdown("Built with ❤️ using Streamlit, Python, and Machine Learning")
+      w
+  
