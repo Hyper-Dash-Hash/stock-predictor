@@ -506,5 +506,5 @@ else:
 # Footer
 st.markdown("---")
 st.markdown("Built with ❤️ using Streamlit, Python, and Machine Learning")
-      w
+      
   
