@@ -16,7 +16,7 @@ import random
 # Page configuration
 st.set_page_config(
     page_title="AI Stock Predictor Pro",
-    page_icon="🚀",
+    page_icon="��",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -197,13 +197,13 @@ def create_advanced_features(data):
     df['price_change'] = df['Close'] - df['Close'].shift(1)
     df['price_change_pct'] = df['price_change'] / df['Close'].shift(1)
     
-    # Moving averages
-    for window in [5, 10, 20, 50, 200]:
+    # Moving averages (reduced for smaller datasets)
+    for window in [5, 10, 20]:  # Removed 50, 200 for smaller datasets
         df[f'sma_{window}'] = ta.trend.sma_indicator(df['Close'], window=window)
         df[f'ema_{window}'] = ta.trend.ema_indicator(df['Close'], window=window)
     
-    # RSI with multiple timeframes
-    for window in [14, 21]:
+    # RSI with shorter timeframes
+    for window in [14]:  # Removed 21 for smaller datasets
         df[f'rsi_{window}'] = ta.momentum.rsi(df['Close'], window=window)
     
     # MACD
@@ -218,22 +218,22 @@ def create_advanced_features(data):
     df['bb_width'] = (df['bb_upper'] - df['bb_lower']) / df['bb_middle']
     df['bb_position'] = (df['Close'] - df['bb_lower']) / (df['bb_upper'] - df['bb_lower'])
     
-    # Volume indicators
-    df['volume_sma'] = df['Volume'].rolling(window=20).mean()
+    # Volume indicators (reduced window)
+    df['volume_sma'] = df['Volume'].rolling(window=10).mean()  # Reduced from 20 to 10
     df['volume_ratio'] = df['Volume'] / df['volume_sma']
     df['on_balance_volume'] = ta.volume.on_balance_volume(df['Close'], df['Volume'])
     
-    # Volatility indicators
+    # Volatility indicators (reduced window)
     df['atr'] = ta.volatility.average_true_range(df['High'], df['Low'], df['Close'])
-    df['volatility'] = df['returns'].rolling(window=20).std()
+    df['volatility'] = df['returns'].rolling(window=10).std()  # Reduced from 20 to 10
     
     # Momentum indicators
     df['stoch_k'] = ta.momentum.stoch(df['High'], df['Low'], df['Close'])
     df['stoch_d'] = ta.momentum.stoch_signal(df['High'], df['Low'], df['Close'])
     
-    # Support and resistance levels
-    df['support'] = df['Low'].rolling(window=20).min()
-    df['resistance'] = df['High'].rolling(window=20).max()
+    # Support and resistance levels (reduced window)
+    df['support'] = df['Low'].rolling(window=10).min()  # Reduced from 20 to 10
+    df['resistance'] = df['High'].rolling(window=10).max()  # Reduced from 20 to 10
     
     # Target variables for different timeframes
     for days in [1, 3, 7]:
@@ -244,12 +244,14 @@ def create_advanced_features(data):
 # Enhanced model training with multiple timeframes
 def train_models(features):
     """Train models for different prediction timeframes"""
-    if features is None or len(features) < 100:
+    if features is None or len(features) < 30:  # Reduced from 100 to 30
+        st.warning(f"⚠️ Only {len(features) if features is not None else 0} data points available. Need at least 30 for basic predictions.")
         return {}, {}
     
     features = features.dropna()
     
-    if len(features) < 50:
+    if len(features) < 20:  # Reduced from 50 to 20
+        st.warning(f"⚠️ After cleaning, only {len(features)} data points remain. Need at least 20 for training.")
         return {}, {}
     
     models = {}
@@ -259,6 +261,7 @@ def train_models(features):
     feature_cols = [col for col in features.columns if not col.startswith('target') and col not in ['Open', 'High', 'Low', 'Close', 'Volume']]
     
     if len(feature_cols) == 0:
+        st.error("❌ No technical indicators could be created. This might be due to insufficient data.")
         return {}, {}
     
     X = features[feature_cols]
@@ -270,21 +273,30 @@ def train_models(features):
         if target_col in features.columns:
             y = features[target_col]
             
-            if len(y.unique()) > 1:  # Only train if we have both classes
-                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-                
-                model = RandomForestClassifier(n_estimators=100, random_state=42)
-                model.fit(X_train, y_train)
-                
-                y_pred = model.predict(X_test)
-                
-                models[timeframe] = model
-                metrics[timeframe] = {
-                    'accuracy': accuracy_score(y_test, y_pred),
-                    'precision': precision_score(y_test, y_pred, zero_division=0),
-                    'recall': recall_score(y_test, y_pred, zero_division=0),
-                    'f1_score': f1_score(y_test, y_pred, zero_division=0)
-                }
+            # Check if we have enough data and both classes
+            if len(y.unique()) > 1 and len(y) >= 10:  # Reduced minimum requirement
+                try:
+                    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+                    
+                    model = RandomForestClassifier(n_estimators=50, random_state=42)  # Reduced from 100 to 50
+                    model.fit(X_train, y_train)
+                    
+                    y_pred = model.predict(X_test)
+                    
+                    models[timeframe] = model
+                    metrics[timeframe] = {
+                        'accuracy': accuracy_score(y_test, y_pred),
+                        'precision': precision_score(y_test, y_pred, zero_division=0),
+                        'recall': recall_score(y_test, y_pred, zero_division=0),
+                        'f1_score': f1_score(y_test, y_pred, zero_division=0)
+                    }
+                    
+                    st.success(f"✅ {timeframe.upper()} model trained successfully!")
+                    
+                except Exception as e:
+                    st.warning(f"⚠️ Could not train {timeframe.upper()} model: {str(e)}")
+            else:
+                st.warning(f"⚠️ Insufficient data for {timeframe.upper()} predictions. Need at least 10 samples with both classes.")
     
     return models, metrics
 
@@ -417,7 +429,7 @@ if st.session_state.current_page == 'home':
     # Hero Section
     st.markdown("""
     <div class="hero-section">
-        <h1 style="font-size: 3.5rem; margin-bottom: 1rem;">🚀 AI Stock Predictor Pro</h1>
+        <h1 style="font-size: 3.5rem; margin-bottom: 1rem;">�� AI Stock Predictor Pro</h1>
         <p style="font-size: 1.5rem; margin-bottom: 2rem;">
             Advanced AI predictions with multiple timeframes, interactive charts, and portfolio tracking
         </p>
@@ -442,44 +454,44 @@ if st.session_state.current_page == 'home':
     with col1:
         st.markdown("""
         <div class="feature-card">
-            <h3>📊 Multi-Timeframe Predictions</h3>
-            <p>Predict 1 day, 3 days, and 1 week ahead with confidence intervals</p>
+            <h3 style="color: #333 !important; font-weight: bold;">📊 Multi-Timeframe Predictions</h3>
+            <p style="color: #555 !important;">Predict 1 day, 3 days, and 1 week ahead with confidence intervals</p>
         </div>
         """, unsafe_allow_html=True)
         
         st.markdown("""
         <div class="feature-card">
-            <h3>📈 Interactive Charts</h3>
-            <p>Zoom, pan, and explore technical indicators on interactive price charts</p>
+            <h3 style="color: #333 !important; font-weight: bold;">�� Interactive Charts</h3>
+            <p style="color: #555 !important;">Zoom, pan, and explore technical indicators on interactive price charts</p>
         </div>
         """, unsafe_allow_html=True)
         
         st.markdown("""
         <div class="feature-card">
-            <h3>⭐ Watchlist</h3>
-            <p>Save and track multiple stocks in your personalized watchlist</p>
+            <h3 style="color: #333 !important; font-weight: bold;">⭐ Watchlist</h3>
+            <p style="color: #555 !important;">Save and track multiple stocks in your personalized watchlist</p>
         </div>
         """, unsafe_allow_html=True)
     
     with col2:
         st.markdown("""
         <div class="feature-card">
-            <h3>🌙 Dark Mode</h3>
-            <p>Switch between light and dark themes for comfortable viewing</p>
+            <h3 style="color: #333 !important; font-weight: bold;">🌙 Dark Mode</h3>
+            <p style="color: #555 !important;">Switch between light and dark themes for comfortable viewing</p>
         </div>
         """, unsafe_allow_html=True)
         
         st.markdown("""
         <div class="feature-card">
-            <h3>🎯 Advanced Analytics</h3>
-            <p>Comprehensive technical indicators and risk assessment</p>
+            <h3 style="color: #333 !important; font-weight: bold;">�� Advanced Analytics</h3>
+            <p style="color: #555 !important;">Comprehensive technical indicators and risk assessment</p>
         </div>
         """, unsafe_allow_html=True)
         
         st.markdown("""
         <div class="feature-card">
-            <h3>📊 Performance Tracking</h3>
-            <p>Track prediction accuracy and model performance over time</p>
+            <h3 style="color: #333 !important; font-weight: bold;">📊 Performance Tracking</h3>
+            <p style="color: #555 !important;">Track prediction accuracy and model performance over time</p>
         </div>
         """, unsafe_allow_html=True)
     
@@ -498,7 +510,7 @@ if st.session_state.current_page == 'home':
         </div>
         """, unsafe_allow_html=True)
         
-        if st.button("🚀 Launch Pro Predictor", type="primary", use_container_width=True):
+        if st.button("�� Launch Pro Predictor", type="primary", use_container_width=True):
             navigate_to('predictor')
 
 # Predictor Page
@@ -507,13 +519,13 @@ elif st.session_state.current_page == 'predictor':
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
-        if st.button("🏠 Back to Home", use_container_width=True):
+        if st.button("�� Back to Home", use_container_width=True):
             navigate_to('home')
     
     # Header
     st.markdown("""
     <div class="hero-section">
-        <h1>📈 AI Stock Predictor Pro</h1>
+        <h1>�� AI Stock Predictor Pro</h1>
         <p style="font-size: 1.2rem; margin-top: 0.5rem;">
             Advanced predictions with multiple timeframes and interactive analytics
         </p>
@@ -538,7 +550,7 @@ elif st.session_state.current_page == 'predictor':
         # Time period
         st.markdown("**⏰ Time Period:**")
         period_options = {
-            "📅 6 Months": "6mo",
+            "�� 6 Months": "6mo",
             "📅 1 Year": "1y", 
             "📅 2 Years": "2y",
             "📅 5 Years": "5y"
@@ -675,14 +687,14 @@ elif st.session_state.current_page == 'predictor':
     # Information section
     else:
         st.markdown("""
-        ## 🚀 Pro Features Guide
+        ## �� Pro Features Guide
         
         ### 📊 Multi-Timeframe Predictions
         - **1 Day**: Short-term price movement prediction
         - **3 Days**: Medium-term trend analysis
         - **7 Days**: Weekly outlook with confidence intervals
         
-        ### 📈 Interactive Charts
+        ### �� Interactive Charts
         - **Zoom & Pan**: Explore price data in detail
         - **Technical Indicators**: Overlay moving averages and Bollinger Bands
         - **Candlestick View**: Professional trading chart format
