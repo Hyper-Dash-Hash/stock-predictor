@@ -31,7 +31,7 @@ if 'dark_mode' not in st.session_state:
 if 'prediction_history' not in st.session_state:
     st.session_state.prediction_history = {}
 
-# Enhanced CSS with dark mode support
+# Enhanced CSS with better contrast and fixed styling
 def get_css(dark_mode=False):
     if dark_mode:
         return """
@@ -55,14 +55,22 @@ def get_css(dark_mode=False):
                 margin-bottom: 3rem;
                 box-shadow: 0 15px 35px rgba(0,0,0,0.3);
             }
+            .hero-section h1, .hero-section p {
+                color: white !important;
+                text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            }
             .feature-card {
-                background: #2d2d2d;
+                background: rgba(45, 45, 45, 0.9);
                 padding: 2rem;
                 border-radius: 15px;
                 margin: 1rem 0;
                 box-shadow: 0 5px 15px rgba(0,0,0,0.3);
                 border-left: 5px solid #667eea;
                 color: white;
+            }
+            .feature-card h3, .feature-card p {
+                color: white !important;
+                text-shadow: 0 1px 2px rgba(0,0,0,0.3);
             }
             .prediction-card {
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -73,7 +81,7 @@ def get_css(dark_mode=False):
                 text-align: center;
             }
             .watchlist-item {
-                background: #2d2d2d;
+                background: rgba(45, 45, 45, 0.9);
                 padding: 1rem;
                 border-radius: 10px;
                 margin: 0.5rem 0;
@@ -81,12 +89,36 @@ def get_css(dark_mode=False):
                 color: white;
             }
             .timeframe-card {
-                background: #2d2d2d;
+                background: rgba(45, 45, 45, 0.9);
                 padding: 1rem;
                 border-radius: 10px;
                 margin: 0.5rem 0;
                 color: white;
                 text-align: center;
+            }
+            .info-section {
+                background: rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(20px);
+                padding: 2rem;
+                border-radius: 20px;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                color: white;
+            }
+            .info-section h2, .info-section h3, .info-section p, .info-section li {
+                color: white !important;
+                text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            }
+            .stats-card {
+                background: rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(20px);
+                padding: 2rem;
+                border-radius: 20px;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                text-align: center;
+            }
+            .stats-card h2, .stats-card h3, .stats-card p {
+                color: white !important;
+                text-shadow: 0 1px 2px rgba(0,0,0,0.3);
             }
         </style>
         """
@@ -102,6 +134,10 @@ def get_css(dark_mode=False):
                 margin-bottom: 3rem;
                 box-shadow: 0 15px 35px rgba(0,0,0,0.1);
             }
+            .hero-section h1, .hero-section p {
+                color: white !important;
+                text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            }
             .feature-card {
                 background: white;
                 padding: 2rem;
@@ -109,6 +145,13 @@ def get_css(dark_mode=False):
                 margin: 1rem 0;
                 box-shadow: 0 5px 15px rgba(0,0,0,0.1);
                 border-left: 5px solid #667eea;
+            }
+            .feature-card h3 {
+                color: #333 !important;
+                font-weight: bold;
+            }
+            .feature-card p {
+                color: #555 !important;
             }
             .prediction-card {
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -133,6 +176,40 @@ def get_css(dark_mode=False):
                 margin: 0.5rem 0;
                 box-shadow: 0 2px 5px rgba(0,0,0,0.1);
                 text-align: center;
+            }
+            .info-section {
+                background: rgba(102, 126, 234, 0.1);
+                padding: 2rem;
+                border-radius: 20px;
+                border: 1px solid rgba(102, 126, 234, 0.2);
+            }
+            .info-section h2, .info-section h3 {
+                color: #333 !important;
+                font-weight: bold;
+            }
+            .info-section p, .info-section li {
+                color: #555 !important;
+            }
+            .stats-card {
+                background: rgba(102, 126, 234, 0.1);
+                padding: 2rem;
+                border-radius: 20px;
+                border: 1px solid rgba(102, 126, 234, 0.2);
+                text-align: center;
+            }
+            .stats-card h2 {
+                color: #667eea !important;
+                font-size: 2.5rem;
+                margin-bottom: 0.5rem;
+            }
+            .stats-card h3 {
+                color: #333 !important;
+                margin: 0;
+                font-weight: bold;
+            }
+            .stats-card p {
+                color: #666 !important;
+                margin: 0;
             }
         </style>
         """
@@ -454,44 +531,44 @@ if st.session_state.current_page == 'home':
     with col1:
         st.markdown("""
         <div class="feature-card">
-            <h3 style="color: #333 !important; font-weight: bold;">📊 Multi-Timeframe Predictions</h3>
-            <p style="color: #555 !important;">Predict 1 day, 3 days, and 1 week ahead with confidence intervals</p>
+            <h3>📊 Multi-Timeframe Predictions</h3>
+            <p>Predict 1 day, 3 days, and 1 week ahead with confidence intervals</p>
         </div>
         """, unsafe_allow_html=True)
         
         st.markdown("""
         <div class="feature-card">
-            <h3 style="color: #333 !important; font-weight: bold;">📈 Interactive Charts</h3>
-            <p style="color: #555 !important;">Zoom, pan, and explore technical indicators on interactive price charts</p>
+            <h3>📈 Interactive Charts</h3>
+            <p>Zoom, pan, and explore technical indicators on interactive price charts</p>
         </div>
         """, unsafe_allow_html=True)
         
         st.markdown("""
         <div class="feature-card">
-            <h3 style="color: #333 !important; font-weight: bold;">⭐ Watchlist</h3>
-            <p style="color: #555 !important;">Save and track multiple stocks in your personalized watchlist</p>
+            <h3>⭐ Watchlist</h3>
+            <p>Save and track multiple stocks in your personalized watchlist</p>
         </div>
         """, unsafe_allow_html=True)
     
     with col2:
         st.markdown("""
         <div class="feature-card">
-            <h3 style="color: #333 !important; font-weight: bold;">🌙 Dark Mode</h3>
-            <p style="color: #555 !important;">Switch between light and dark themes for comfortable viewing</p>
+            <h3>🌙 Dark Mode</h3>
+            <p>Switch between light and dark themes for comfortable viewing</p>
         </div>
         """, unsafe_allow_html=True)
         
         st.markdown("""
         <div class="feature-card">
-            <h3 style="color: #333 !important; font-weight: bold;">🎯 Advanced Analytics</h3>
-            <p style="color: #555 !important;">Comprehensive technical indicators and risk assessment</p>
+            <h3>🎯 Advanced Analytics</h3>
+            <p>Comprehensive technical indicators and risk assessment</p>
         </div>
         """, unsafe_allow_html=True)
         
         st.markdown("""
         <div class="feature-card">
-            <h3 style="color: #333 !important; font-weight: bold;">📊 Performance Tracking</h3>
-            <p style="color: #555 !important;">Track prediction accuracy and model performance over time</p>
+            <h3>📊 Performance Tracking</h3>
+            <p>Track prediction accuracy and model performance over time</p>
         </div>
         """, unsafe_allow_html=True)
     
@@ -520,37 +597,37 @@ if st.session_state.current_page == 'home':
     
     with col1:
         st.markdown("""
-        <div style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); padding: 2rem; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.2); text-align: center;">
-            <h2 style="color: #667eea; font-size: 2.5rem; margin-bottom: 0.5rem;">🚀</h2>
-            <h3 style="color: #ffffff !important; margin: 0; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">AI-Powered</h3>
-            <p style="color: #e0e0e0 !important; margin: 0;">Advanced ML algorithms</p>
+        <div class="stats-card">
+            <h2>🚀</h2>
+            <h3>AI-Powered</h3>
+            <p>Advanced ML algorithms</p>
         </div>
         """, unsafe_allow_html=True)
     
     with col2:
         st.markdown("""
-        <div style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); padding: 2rem; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.2); text-align: center;">
-            <h2 style="color: #667eea; font-size: 2.5rem; margin-bottom: 0.5rem;">⚡</h2>
-            <h3 style="color: #ffffff !important; margin: 0; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">Real-Time</h3>
-            <p style="color: #e0e0e0 !important; margin: 0;">Live market data</p>
+        <div class="stats-card">
+            <h2>⚡</h2>
+            <h3>Real-Time</h3>
+            <p>Live market data</p>
         </div>
         """, unsafe_allow_html=True)
     
     with col3:
         st.markdown("""
-        <div style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); padding: 2rem; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.2); text-align: center;">
-            <h2 style="color: #667eea; font-size: 2.5rem; margin-bottom: 0.5rem;">🎯</h2>
-            <h3 style="color: #ffffff !important; margin: 0; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">Accurate</h3>
-            <p style="color: #e0e0e0 !important; margin: 0;">High prediction accuracy</p>
+        <div class="stats-card">
+            <h2>🎯</h2>
+            <h3>Accurate</h3>
+            <p>High prediction accuracy</p>
         </div>
         """, unsafe_allow_html=True)
     
     with col4:
         st.markdown("""
-        <div style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); padding: 2rem; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.2); text-align: center;">
-            <h2 style="color: #667eea; font-size: 2.5rem; margin-bottom: 0.5rem;">💎</h2>
-            <h3 style="color: #ffffff !important; margin: 0; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">Professional</h3>
-            <p style="color: #e0e0e0 !important; margin: 0;">Institutional-grade analysis</p>
+        <div class="stats-card">
+            <h2>💎</h2>
+            <h3>Professional</h3>
+            <p>Institutional-grade analysis</p>
         </div>
         """, unsafe_allow_html=True)
 
@@ -728,40 +805,40 @@ elif st.session_state.current_page == 'predictor':
     # Information section
     else:
         st.markdown("""
-        <div style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); padding: 2rem; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.2);">
-            <h2 style="color: #ffffff !important; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">🚀 Pro Features Guide</h2>
+        <div class="info-section">
+            <h2>🚀 Pro Features Guide</h2>
             
-            <h3 style="color: #ffffff !important; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">📊 Multi-Timeframe Predictions</h3>
-            <ul style="color: #e0e0e0 !important;">
+            <h3>📊 Multi-Timeframe Predictions</h3>
+            <ul>
                 <li><strong>1 Day</strong>: Short-term price movement prediction</li>
                 <li><strong>3 Days</strong>: Medium-term trend analysis</li>
                 <li><strong>7 Days</strong>: Weekly outlook with confidence intervals</li>
             </ul>
             
-            <h3 style="color: #ffffff !important; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">📈 Interactive Charts</h3>
-            <ul style="color: #e0e0e0 !important;">
+            <h3>📈 Interactive Charts</h3>
+            <ul>
                 <li><strong>Zoom & Pan</strong>: Explore price data in detail</li>
                 <li><strong>Technical Indicators</strong>: Overlay moving averages and Bollinger Bands</li>
                 <li><strong>Candlestick View</strong>: Professional trading chart format</li>
             </ul>
             
-            <h3 style="color: #ffffff !important; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">⭐ Watchlist Management</h3>
-            <ul style="color: #e0e0e0 !important;">
+            <h3>⭐ Watchlist Management</h3>
+            <ul>
                 <li><strong>Save Favorites</strong>: Add stocks to your personal watchlist</li>
                 <li><strong>Quick Access</strong>: Analyze multiple stocks efficiently</li>
                 <li><strong>Portfolio Tracking</strong>: Monitor your selected stocks</li>
             </ul>
             
-            <h3 style="color: #ffffff !important; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">🌙 Dark Mode</h3>
-            <ul style="color: #e0e0e0 !important;">
+            <h3>🌙 Dark Mode</h3>
+            <ul>
                 <li><strong>Toggle Theme</strong>: Switch between light and dark modes</li>
                 <li><strong>Eye Comfort</strong>: Reduce eye strain during extended use</li>
                 <li><strong>Professional Look</strong>: Modern interface design</li>
             </ul>
             
-            <h2 style="color: #ffffff !important; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">🎯 How to Use</h2>
+            <h2>🎯 How to Use</h2>
             
-            <ol style="color: #e0e0e0 !important;">
+            <ol>
                 <li><strong>📊 Enter a stock symbol</strong> (e.g., AAPL, MSFT, GOOGL)</li>
                 <li><strong>⏰ Select time period</strong> for analysis</li>
                 <li><strong>⭐ Add to watchlist</strong> for easy access</li>
@@ -770,9 +847,9 @@ elif st.session_state.current_page == 'predictor':
                 <li><strong>🔮 View multi-timeframe predictions</strong> with confidence intervals</li>
             </ol>
             
-            <h2 style="color: #ffffff !important; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">⚠️ Disclaimer</h2>
+            <h2>⚠️ Disclaimer</h2>
             
-            <p style="color: #e0e0e0 !important;">
+            <p>
                 This tool is for educational purposes only. Past performance does not guarantee future results. 
                 Always do your own research before making investment decisions.
             </p>
