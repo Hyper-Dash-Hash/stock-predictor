@@ -24,8 +24,10 @@ if 'watchlist' not in st.session_state:
     st.session_state.watchlist = []
 if 'dark_mode' not in st.session_state:
     st.session_state.dark_mode = False
+if 'symbol_input' not in st.session_state:
+    st.session_state.symbol_input = "AAPL"
 
-# Fixed CSS without problematic HTML
+# Fixed CSS with proper contrast
 def get_css(dark_mode=False):
     return """
     <style>
@@ -38,6 +40,10 @@ def get_css(dark_mode=False):
             margin-bottom: 3rem;
             box-shadow: 0 15px 35px rgba(0,0,0,0.1);
         }
+        .hero-section h1, .hero-section p {
+            color: white !important;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
         .feature-card {
             background: white;
             padding: 2rem;
@@ -45,6 +51,13 @@ def get_css(dark_mode=False):
             margin: 1rem 0;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             border-left: 5px solid #667eea;
+        }
+        .feature-card h3 {
+            color: #333 !important;
+            font-weight: bold;
+        }
+        .feature-card p {
+            color: #555 !important;
         }
         .prediction-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -54,11 +67,22 @@ def get_css(dark_mode=False):
             margin: 1rem 0;
             text-align: center;
         }
+        .prediction-card h3, .prediction-card p {
+            color: white !important;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
         .info-section {
             background: rgba(102, 126, 234, 0.1);
             padding: 2rem;
             border-radius: 20px;
             border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+        .info-section h2, .info-section h3 {
+            color: #333 !important;
+            font-weight: bold;
+        }
+        .info-section p, .info-section li {
+            color: #555 !important;
         }
         .stats-card {
             background: rgba(102, 126, 234, 0.1);
@@ -66,6 +90,20 @@ def get_css(dark_mode=False):
             border-radius: 20px;
             border: 1px solid rgba(102, 126, 234, 0.2);
             text-align: center;
+        }
+        .stats-card h2 {
+            color: #667eea !important;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .stats-card h3 {
+            color: #333 !important;
+            margin: 0;
+            font-weight: bold;
+        }
+        .stats-card p {
+            color: #666 !important;
+            margin: 0;
         }
         .prediction-badge {
             display: inline-block;
@@ -436,7 +474,7 @@ elif st.session_state.current_page == 'predictor':
         st.markdown("### ⚙️ Settings")
         
         # Stock symbol with auto-replace functionality
-        symbol = st.text_input("📊 Stock Symbol", value="AAPL", key="symbol_input").upper()
+        symbol = st.text_input("📊 Stock Symbol", value=st.session_state.symbol_input, key="symbol_input").upper()
         
         # Popular symbols with auto-replace functionality
         st.markdown("**⭐ Popular Symbols:**")
@@ -444,9 +482,8 @@ elif st.session_state.current_page == 'predictor':
         cols = st.columns(2)
         for i, sym in enumerate(popular_symbols):
             if cols[i % 2].button(sym, key=f"btn_{sym}"):
-                # Update the symbol input
+                # Update the symbol input using session state
                 st.session_state.symbol_input = sym
-                symbol = sym
                 st.rerun()
         
         # Time period
@@ -597,48 +634,37 @@ elif st.session_state.current_page == 'predictor':
     # Information section
     else:
         st.markdown("### 📚 How to Use")
+        
         st.markdown("""
-        <div class="info-section">
-            <h2>🚀 Pro Features Guide</h2>
-            
-            <h3>📊 Multi-Timeframe Predictions</h3>
-            <ul>
-                <li><strong>1 Day to 5 Years:</strong> Choose from 9 different prediction timeframes</li>
-                <li><strong>Confidence Intervals:</strong> See expected price ranges</li>
-                <li><strong>Plain English:</strong> Easy-to-understand forecasts</li>
-            </ul>
-            
-            <h3>📈 Interactive Charts</h3>
-            <ul>
-                <li><strong>Zoom & Pan:</strong> Explore price data in detail</li>
-                <li><strong>Technical Indicators:</strong> Overlay moving averages</li>
-                <li><strong>Candlestick View:</strong> Professional trading chart format</li>
-            </ul>
-            
-            <h3>⭐ Watchlist Management</h3>
-            <ul>
-                <li><strong>Save Favorites:</strong> Add stocks to your personal watchlist</li>
-                <li><strong>Quick Access:</strong> Analyze multiple stocks efficiently</li>
-                <li><strong>Portfolio Tracking:</strong> Monitor your selected stocks</li>
-            </ul>
-            
-            <h2>🎯 How to Use</h2>
-            
-            <ol>
-                <li><strong>📊 Enter a stock symbol</strong> (e.g., AAPL, MSFT, GOOGL)</li>
-                <li><strong>⏰ Select time period</strong> for analysis</li>
-                <li><strong>🔮 Choose prediction timeframe</strong> (1 day to 5 years)</li>
-                <li><strong>⭐ Add to watchlist</strong> for easy access</li>
-                <li><strong>🚀 Run advanced analysis</strong> for comprehensive predictions</li>
-                <li><strong>📈 Explore interactive charts</strong> and technical indicators</li>
-                <li><strong>🔮 View predictions</strong> with confidence intervals</li>
-            </ol>
-            
-            <h2>⚠️ Disclaimer</h2>
-            
-            <p>
-                This tool is for educational purposes only. Past performance does not guarantee future results. 
-                Always do your own research before making investment decisions.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
+        **🚀 Pro Features Guide**
+        
+        **📊 Multi-Timeframe Predictions**
+        - 1 Day to 5 Years: Choose from 9 different prediction timeframes
+        - Confidence Intervals: See expected price ranges
+        - Plain English: Easy-to-understand forecasts
+        
+        **📈 Interactive Charts**
+        - Zoom & Pan: Explore price data in detail
+        - Technical Indicators: Overlay moving averages
+        - Candlestick View: Professional trading chart format
+        
+        **⭐ Watchlist Management**
+        - Save Favorites: Add stocks to your personal watchlist
+        - Quick Access: Analyze multiple stocks efficiently
+        - Portfolio Tracking: Monitor your selected stocks
+        
+        **🎯 How to Use**
+        
+        1. **📊 Enter a stock symbol** (e.g., AAPL, MSFT, GOOGL)
+        2. **⏰ Select time period** for analysis
+        3. **🔮 Choose prediction timeframe** (1 day to 5 years)
+        4. **⭐ Add to watchlist** for easy access
+        5. **🚀 Run advanced analysis** for comprehensive predictions
+        6. **📈 Explore interactive charts** and technical indicators
+        7. **🔮 View predictions** with confidence intervals
+        
+        **⚠️ Disclaimer**
+        
+        This tool is for educational purposes only. Past performance does not guarantee future results. 
+        Always do your own research before making investment decisions.
+        """)
