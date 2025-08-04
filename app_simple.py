@@ -259,8 +259,8 @@ def create_advanced_features(data):
     df['bb_upper'] = ta.volatility.bollinger_hband(df['Close'])
     df['bb_lower'] = ta.volatility.bollinger_lband(df['Close'])
     
-    # Target variables for different timeframes
-    for days in [1, 3, 7]:
+    # Target variables for different timeframes - including longer ones
+    for days in [1, 3, 7, 30, 90, 180, 365, 730, 1825]:
         df[f'target_{days}d'] = (df['Close'].shift(-days) > df['Close']).astype(int)
     
     return df
@@ -280,7 +280,8 @@ def train_models(features):
     feature_cols = [col for col in features.columns if not col.startswith('target') and col not in ['Open', 'High', 'Low', 'Close', 'Volume']]
     X = features[feature_cols]
     
-    for timeframe in ['1d', '3d', '7d']:
+    # Train models for different timeframes including longer ones
+    for timeframe in ['1d', '3d', '7d', '30d', '90d', '180d', '365d', '730d', '1825d']:
         target_col = f'target_{timeframe.replace("d", "")}d'
         
         if target_col in features.columns:
@@ -321,76 +322,89 @@ def make_predictions(models, features, current_price, prediction_timeframe="7d")
     # Convert prediction timeframe to days
     timeframe_days = int(prediction_timeframe.replace('d', ''))
     
-    for timeframe, model in models.items():
-        if model is not None:
-            prediction = model.predict(latest_features)[0]
-            probabilities = model.predict_proba(latest_features)[0]
-            confidence = probabilities.max()
-            
-            # Calculate price prediction
-            avg_return = features['returns'].mean()
-            std_return = features['returns'].std()
-            
-            # Adjust for longer timeframes
-            if timeframe_days > 7:
-                compound_return = avg_return * (timeframe_days / 7)
-                compound_volatility = std_return * np.sqrt(timeframe_days / 7)
-            else:
-                compound_return = avg_return
-                compound_volatility = std_return
-            
-            if prediction == 1:
-                expected_return = compound_return
-                direction = "UP"
-                arrow = "↗️"
-            else:
-                expected_return = -compound_return
-                direction = "DOWN"
-                arrow = "↘️"
-            
-            predicted_price = current_price * (1 + expected_return)
-            confidence_interval = compound_volatility * 1.96
-            lower_bound = current_price * (1 + expected_return - confidence_interval)
-            upper_bound = current_price * (1 + expected_return + confidence_interval)
-            
-            # Generate plain English forecast
-            if confidence > 0.7:
-                confidence_text = "high confidence"
-            elif confidence > 0.5:
-                confidence_text = "moderate confidence"
-            else:
-                confidence_text = "low confidence"
-            
-            # Timeframe-specific descriptions
-            timeframe_texts = {
-                1: "tomorrow",
-                3: "in 3 days",
-                7: "next week",
-                30: "next month",
-                90: "in 3 months",
-                180: "in 6 months",
-                365: "in 1 year",
-                730: "in 2 years",
-                1825: "in 5 years"
-            }
-            time_text = timeframe_texts.get(timeframe_days, f"in {timeframe_days} days")
-            
-            percentage_change = abs(expected_return) * 100
-            plain_english = f"Our AI model predicts with {confidence_text} that the stock will move {direction.lower()} {arrow} by {percentage_change:.1f}% {time_text}, reaching ${predicted_price:.2f} (range: ${lower_bound:.2f} - ${upper_bound:.2f})."
-            
-            predictions[timeframe] = {
-                'direction': direction,
-                'arrow': arrow,
-                'confidence': confidence,
-                'confidence_text': confidence_text,
-                'predicted_price': predicted_price,
-                'lower_bound': lower_bound,
-                'upper_bound': upper_bound,
-                'expected_return': expected_return,
-                'plain_english': plain_english,
-                'timeframe_days': timeframe_days,
-                'percentage_change': percentage_change
-            }
+    # Find the closest trained model for this timeframe
+    available_timeframes = list(models.keys())
+    if not available_timeframes:
+        return predictions
+    
+    # Convert available timeframes to days for comparison
+    available_days = [int(tf.replace('d', '')) for tf in available_timeframes]
+    
+    # Find the closest timeframe
+    closest_timeframe = min(available_days, key=lambda x: abs(x - timeframe_days))
+    closest_timeframe_str = f"{closest_timeframe}d"
+    
+    if closest_timeframe_str in models:
+        model = models[closest_timeframe_str]
+        prediction = model.predict(latest_features)[0]
+        probabilities = model.predict_proba(latest_features)[0]
+        confidence = probabilities.max()
+        
+        # Calculate price prediction
+        avg_return = features['returns'].mean()
+        std_return = features['returns'].std()
+        
+        # Adjust for longer timeframes
+        if timeframe_days > 7:
+            compound_return = avg_return * (timeframe_days / 7)
+            compound_volatility = std_return * np.sqrt(timeframe_days / 7)
+        else:
+            compound_return = avg_return
+            compound_volatility = std_return
+        
+        if prediction == 1:
+            expected_return = compound_return
+            direction = "UP"
+            arrow = "↗️"
+        else:
+            expected_return = -compound_return
+            direction = "DOWN"
+            arrow = "↘️"
+        
+        predicted_price = current_price * (1 + expected_return)
+        confidence_interval = compound_volatility * 1.96
+        lower_bound = current_price * (1 + expected_return - confidence_interval)
+        upper_bound = current_price * (1 + expected_return + confidence_interval)
+        
+        # Generate plain English forecast
+        if confidence > 0.7:
+            confidence_text = "high confidence"
+        elif confidence > 0.5:
+            confidence_text = "moderate confidence"
+        else:
+            confidence_text = "low confidence"
+        
+        # Timeframe-specific descriptions
+        timeframe_texts = {
+            1: "tomorrow",
+            3: "in 3 days",
+            7: "next week",
+            30: "next month",
+            90: "in 3 months",
+            180: "in 6 months",
+            365: "in 1 year",
+            730: "in 2 years",
+            1825: "in 5 years"
+        }
+        time_text = timeframe_texts.get(timeframe_days, f"in {timeframe_days} days")
+        
+        percentage_change = abs(expected_return) * 100
+        plain_english = f"Our AI model predicts with {confidence_text} that the stock will move {direction.lower()} {arrow} by {percentage_change:.1f}% {time_text}, reaching ${predicted_price:.2f} (range: ${lower_bound:.2f} - ${upper_bound:.2f})."
+        
+        predictions[prediction_timeframe] = {
+            'direction': direction,
+            'arrow': arrow,
+            'confidence': confidence,
+            'confidence_text': confidence_text,
+            'predicted_price': predicted_price,
+            'lower_bound': lower_bound,
+            'upper_bound': upper_bound,
+            'expected_return': expected_return,
+            'plain_english': plain_english,
+            'timeframe_days': timeframe_days,
+            'percentage_change': percentage_change,
+            'model_used': closest_timeframe_str
+        }
     
     return predictions
 
@@ -685,9 +699,19 @@ elif st.session_state.current_page == 'predictor':
             
             if predictions:
                 for timeframe, pred in predictions.items():
+                    # Get the display name for the timeframe
+                    timeframe_names = {
+                        "7d": "1 Week",
+                        "180d": "6 Months", 
+                        "365d": "1 Year",
+                        "730d": "2 Years",
+                        "1825d": "5 Years"
+                    }
+                    display_name = timeframe_names.get(timeframe, timeframe.upper())
+                    
                     st.markdown(f"""
                     <div class="prediction-card">
-                        <h3>📊 {timeframe.upper()} Prediction</h3>
+                        <h3>📊 {display_name} Prediction</h3>
                         <div class="prediction-badge prediction-{pred['direction'].lower()}">
                             {pred['arrow']} {pred['direction']}
                         </div>
@@ -695,6 +719,7 @@ elif st.session_state.current_page == 'predictor':
                         <p><strong>Expected Price:</strong> ${pred['predicted_price']:.2f}</p>
                         <p><strong>Range:</strong> ${pred['lower_bound']:.2f} - ${pred['upper_bound']:.2f}</p>
                         <p style="font-style: italic; margin-top: 1rem;">{pred['plain_english']}</p>
+                        <p style="font-size: 0.8rem; opacity: 0.7;">Model: {pred.get('model_used', 'Unknown')}</p>
                     </div>
                     """, unsafe_allow_html=True)
             
