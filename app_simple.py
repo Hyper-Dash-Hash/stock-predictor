@@ -24,105 +24,196 @@ if 'watchlist' not in st.session_state:
     st.session_state.watchlist = []
 if 'dark_mode' not in st.session_state:
     st.session_state.dark_mode = False
-if 'symbol_input' not in st.session_state:
-    st.session_state.symbol_input = "AAPL"
+if 'selected_symbol' not in st.session_state:
+    st.session_state.selected_symbol = "AAPL"
 
-# Fixed CSS with proper contrast
+# Fixed CSS with proper contrast and dark mode support
 def get_css(dark_mode=False):
-    return """
-    <style>
-        .hero-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 4rem 2rem;
-            border-radius: 20px;
-            text-align: center;
-            color: white;
-            margin-bottom: 3rem;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-        }
-        .hero-section h1, .hero-section p {
-            color: white !important;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-        .feature-card {
-            background: white;
-            padding: 2rem;
-            border-radius: 15px;
-            margin: 1rem 0;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            border-left: 5px solid #667eea;
-        }
-        .feature-card h3 {
-            color: #333 !important;
-            font-weight: bold;
-        }
-        .feature-card p {
-            color: #555 !important;
-        }
-        .prediction-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 1.5rem;
-            border-radius: 15px;
-            color: white;
-            margin: 1rem 0;
-            text-align: center;
-        }
-        .prediction-card h3, .prediction-card p {
-            color: white !important;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-        }
-        .info-section {
-            background: rgba(102, 126, 234, 0.1);
-            padding: 2rem;
-            border-radius: 20px;
-            border: 1px solid rgba(102, 126, 234, 0.2);
-        }
-        .info-section h2, .info-section h3 {
-            color: #333 !important;
-            font-weight: bold;
-        }
-        .info-section p, .info-section li {
-            color: #555 !important;
-        }
-        .stats-card {
-            background: rgba(102, 126, 234, 0.1);
-            padding: 2rem;
-            border-radius: 20px;
-            border: 1px solid rgba(102, 126, 234, 0.2);
-            text-align: center;
-        }
-        .stats-card h2 {
-            color: #667eea !important;
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-        }
-        .stats-card h3 {
-            color: #333 !important;
-            margin: 0;
-            font-weight: bold;
-        }
-        .stats-card p {
-            color: #666 !important;
-            margin: 0;
-        }
-        .prediction-badge {
-            display: inline-block;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-weight: bold;
-            margin: 0.5rem;
-            color: white;
-        }
-        .prediction-up {
-            background: linear-gradient(135deg, #26A69A, #4CAF50);
-            color: white;
-        }
-        .prediction-down {
-            background: linear-gradient(135deg, #EF5350, #F44336);
-            color: white;
-        }
-    </style>
-    """
+    if dark_mode:
+        return """
+        <style>
+            .main { background-color: #1a1a1a; color: #ffffff; }
+            .stApp { background-color: #1a1a1a; }
+            .css-1d391kg { background-color: #2d2d2d; }
+            
+            .hero-section {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                padding: 4rem 2rem;
+                border-radius: 20px;
+                text-align: center;
+                color: white;
+                margin-bottom: 3rem;
+                box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            }
+            .hero-section h1, .hero-section p {
+                color: white !important;
+                text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            }
+            .feature-card {
+                background: rgba(45, 45, 45, 0.9);
+                padding: 2rem;
+                border-radius: 15px;
+                margin: 1rem 0;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                border-left: 5px solid #667eea;
+                color: white;
+            }
+            .feature-card h3, .feature-card p {
+                color: white !important;
+                text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            }
+            .prediction-card {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                padding: 1.5rem;
+                border-radius: 15px;
+                color: white;
+                margin: 1rem 0;
+                text-align: center;
+            }
+            .prediction-card h3, .prediction-card p {
+                color: white !important;
+                text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            }
+            .info-section {
+                background: rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(20px);
+                padding: 2rem;
+                border-radius: 20px;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                color: white;
+            }
+            .info-section h2, .info-section h3 {
+                color: white !important;
+                font-weight: bold;
+            }
+            .info-section p, .info-section li {
+                color: white !important;
+            }
+            .stats-card {
+                background: rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(20px);
+                padding: 2rem;
+                border-radius: 20px;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                text-align: center;
+            }
+            .stats-card h2, .stats-card h3, .stats-card p {
+                color: white !important;
+                text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            }
+            .prediction-badge {
+                display: inline-block;
+                padding: 0.5rem 1rem;
+                border-radius: 20px;
+                font-weight: bold;
+                margin: 0.5rem;
+                color: white;
+            }
+            .prediction-up {
+                background: linear-gradient(135deg, #26A69A, #4CAF50);
+                color: white;
+            }
+            .prediction-down {
+                background: linear-gradient(135deg, #EF5350, #F44336);
+                color: white;
+            }
+        </style>
+        """
+    else:
+        return """
+        <style>
+            .hero-section {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                padding: 4rem 2rem;
+                border-radius: 20px;
+                text-align: center;
+                color: white;
+                margin-bottom: 3rem;
+                box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            }
+            .hero-section h1, .hero-section p {
+                color: white !important;
+                text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            }
+            .feature-card {
+                background: white;
+                padding: 2rem;
+                border-radius: 15px;
+                margin: 1rem 0;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+                border-left: 5px solid #667eea;
+            }
+            .feature-card h3 {
+                color: #333 !important;
+                font-weight: bold;
+            }
+            .feature-card p {
+                color: #555 !important;
+            }
+            .prediction-card {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                padding: 1.5rem;
+                border-radius: 15px;
+                color: white;
+                margin: 1rem 0;
+                text-align: center;
+            }
+            .prediction-card h3, .prediction-card p {
+                color: white !important;
+                text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            }
+            .info-section {
+                background: rgba(102, 126, 234, 0.1);
+                padding: 2rem;
+                border-radius: 20px;
+                border: 1px solid rgba(102, 126, 234, 0.2);
+            }
+            .info-section h2, .info-section h3 {
+                color: #333 !important;
+                font-weight: bold;
+            }
+            .info-section p, .info-section li {
+                color: #555 !important;
+            }
+            .stats-card {
+                background: rgba(102, 126, 234, 0.1);
+                padding: 2rem;
+                border-radius: 20px;
+                border: 1px solid rgba(102, 126, 234, 0.2);
+                text-align: center;
+            }
+            .stats-card h2 {
+                color: #667eea !important;
+                font-size: 2.5rem;
+                margin-bottom: 0.5rem;
+            }
+            .stats-card h3 {
+                color: #333 !important;
+                margin: 0;
+                font-weight: bold;
+            }
+            .stats-card p {
+                color: #666 !important;
+                margin: 0;
+            }
+            .prediction-badge {
+                display: inline-block;
+                padding: 0.5rem 1rem;
+                border-radius: 20px;
+                font-weight: bold;
+                margin: 0.5rem;
+                color: white;
+            }
+            .prediction-up {
+                background: linear-gradient(135deg, #26A69A, #4CAF50);
+                color: white;
+            }
+            .prediction-down {
+                background: linear-gradient(135deg, #EF5350, #F44336);
+                color: white;
+            }
+        </style>
+        """
 
 st.markdown(get_css(st.session_state.dark_mode), unsafe_allow_html=True)
 
@@ -381,7 +472,7 @@ if st.session_state.current_page == 'home':
         st.markdown("""
         <div class="feature-card">
             <h3>📊 Multi-Timeframe Predictions</h3>
-            <p>Predict 1 day to 5 years ahead</p>
+            <p>Predict 1 week to 5 years ahead</p>
         </div>
         """, unsafe_allow_html=True)
     
@@ -474,7 +565,7 @@ elif st.session_state.current_page == 'predictor':
         st.markdown("### ⚙️ Settings")
         
         # Stock symbol with auto-replace functionality
-        symbol = st.text_input("📊 Stock Symbol", value=st.session_state.symbol_input, key="symbol_input").upper()
+        symbol = st.text_input("📊 Stock Symbol", value=st.session_state.selected_symbol, key="symbol_input").upper()
         
         # Popular symbols with auto-replace functionality
         st.markdown("**⭐ Popular Symbols:**")
@@ -482,8 +573,8 @@ elif st.session_state.current_page == 'predictor':
         cols = st.columns(2)
         for i, sym in enumerate(popular_symbols):
             if cols[i % 2].button(sym, key=f"btn_{sym}"):
-                # Update the symbol input using session state
-                st.session_state.symbol_input = sym
+                # Update the symbol using session state
+                st.session_state.selected_symbol = sym
                 st.rerun()
         
         # Time period
@@ -497,14 +588,10 @@ elif st.session_state.current_page == 'predictor':
         selected_period = st.selectbox("Select Period", list(period_options.keys()))
         period = period_options[selected_period]
         
-        # Prediction timeframes
+        # Prediction timeframes - Updated to your requested timeframes
         st.markdown("**🔮 Prediction Timeframes:**")
         prediction_timeframes = {
-            "📊 1 Day": "1d",
-            "📊 3 Days": "3d", 
             "📊 1 Week": "7d",
-            "📊 1 Month": "30d",
-            "📊 3 Months": "90d",
             "📊 6 Months": "180d",
             "📊 1 Year": "365d",
             "📊 2 Years": "730d",
@@ -639,7 +726,7 @@ elif st.session_state.current_page == 'predictor':
         **🚀 Pro Features Guide**
         
         **📊 Multi-Timeframe Predictions**
-        - 1 Day to 5 Years: Choose from 9 different prediction timeframes
+        - 1 Week to 5 Years: Choose from 5 different prediction timeframes
         - Confidence Intervals: See expected price ranges
         - Plain English: Easy-to-understand forecasts
         
@@ -657,7 +744,7 @@ elif st.session_state.current_page == 'predictor':
         
         1. **📊 Enter a stock symbol** (e.g., AAPL, MSFT, GOOGL)
         2. **⏰ Select time period** for analysis
-        3. **🔮 Choose prediction timeframe** (1 day to 5 years)
+        3. **🔮 Choose prediction timeframe** (1 week to 5 years)
         4. **⭐ Add to watchlist** for easy access
         5. **🚀 Run advanced analysis** for comprehensive predictions
         6. **📈 Explore interactive charts** and technical indicators
