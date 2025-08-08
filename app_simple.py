@@ -221,16 +221,71 @@ st.markdown(get_css(st.session_state.dark_mode), unsafe_allow_html=True)
 def navigate_to(page):
     st.session_state.current_page = page
 
-# Data collection
+# Data collection with retry logic
 @st.cache_data(ttl=300)
 def get_stock_data(symbol, period="1y"):
-    try:
-        ticker = yf.Ticker(symbol)
-        data = ticker.history(period=period)
-        return data if len(data) > 0 else None
-    except Exception as e:
-        st.error(f"Error fetching data: {str(e)}")
-        return None
+    max_retries = 3
+    retry_delay = 2
+    
+    for attempt in range(max_retries):
+        try:
+            # Add random delay to avoid rate limiting
+            time.sleep(random.uniform(1.0, 3.0))
+
+            ticker = yf.Ticker(symbol)
+            data = ticker.history(period=period)
+
+            if data is not None and len(data) > 0:
+                return data
+            else:
+                st.warning(f"No data found for {symbol}")
+                return None
+
+        except Exception as e:
+            error_msg = str(e)
+
+            if "Too Many Requests" in error_msg or "Rate limited" in error_msg:
+                if attempt < max_retries - 1:
+                    st.warning(f"Rate limited. Retrying in {retry_delay} seconds... (Attempt {attempt + 1}/{max_retries})")
+                    time.sleep(retry_delay)
+                    retry_delay *= 2  # Exponential backoff
+                    continue
+                else:
+                    st.error("Rate limited after multiple attempts. Please try again in a few minutes.")
+                    return None
+            else:
+                st.error(f"Error fetching data: {error_msg}")
+                return None
+
+    return None
+
+# Demo data for when API fails
+def get_demo_data(symbol):
+    """Generate demo data when API fails"""
+    import datetime
+    
+    # Create demo data
+    dates = pd.date_range(start='2023-01-01', end='2024-01-01', freq='D')
+    np.random.seed(42)  # For reproducible demo data
+    
+    # Generate realistic price movements
+    base_price = 150.0
+    returns = np.random.normal(0.001, 0.02, len(dates))  # Daily returns
+    prices = [base_price]
+    
+    for ret in returns[1:]:
+        prices.append(prices[-1] * (1 + ret))
+    
+    # Create demo dataframe
+    demo_data = pd.DataFrame({
+        'Open': [p * (1 + np.random.normal(0, 0.01)) for p in prices],
+        'High': [p * (1 + abs(np.random.normal(0, 0.02))) for p in prices],
+        'Low': [p * (1 - abs(np.random.normal(0, 0.02))) for p in prices],
+        'Close': prices,
+        'Volume': np.random.randint(1000000, 10000000, len(dates))
+    }, index=dates)
+    
+    return demo_data
 
 # Feature engineering
 def create_advanced_features(data):
@@ -289,11 +344,18 @@ def train_models(features):
             
             if len(y.unique()) > 1 and len(y) >= 10:
                 try:
-                    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-                    model = RandomForestClassifier(n_estimators=50, random_state=42)
+                    X_train, X_test, y_train, y_test = train_test_split(
+                        X, y, test_size=0.2, random_state=42
+                    )
+                    model = RandomForestClassifier(
+                        n_estimators=200,
+                        random_state=42,
+                        max_depth=None,
+                        min_samples_split=2
+                    )
                     model.fit(X_train, y_train)
                     y_pred = model.predict(X_test)
-                    
+
                     models[timeframe] = model
                     metrics[timeframe] = {
                         'accuracy': accuracy_score(y_test, y_pred),
@@ -306,75 +368,96 @@ def train_models(features):
     
     return models, metrics
 
-# Enhanced predictions with longer timeframes
+# Enhanced predictions with longer timeframes (probability-aware, abstain on low confidence)
 def make_predictions(models, features, current_price, prediction_timeframe="7d"):
     predictions = {}
-    
+
     if not models or features is None:
         return predictions
-    
+
     feature_cols = [col for col in features.columns if not col.startswith('target') and col not in ['Open', 'High', 'Low', 'Close', 'Volume']]
     latest_features = features[feature_cols].iloc[-1:].dropna()
-    
+
     if latest_features.empty:
         return predictions
-    
+
     # Convert prediction timeframe to days
     timeframe_days = int(prediction_timeframe.replace('d', ''))
-    
+
     # Find the closest trained model for this timeframe
     available_timeframes = list(models.keys())
     if not available_timeframes:
         return predictions
-    
-    # Convert available timeframes to days for comparison
+
     available_days = [int(tf.replace('d', '')) for tf in available_timeframes]
-    
-    # Find the closest timeframe
     closest_timeframe = min(available_days, key=lambda x: abs(x - timeframe_days))
     closest_timeframe_str = f"{closest_timeframe}d"
-    
+
     if closest_timeframe_str in models:
         model = models[closest_timeframe_str]
-        prediction = model.predict(latest_features)[0]
-        probabilities = model.predict_proba(latest_features)[0]
-        confidence = probabilities.max()
-        
-        # Calculate price prediction
-        avg_return = features['returns'].mean()
-        std_return = features['returns'].std()
-        
-        # Adjust for longer timeframes
-        if timeframe_days > 7:
-            compound_return = avg_return * (timeframe_days / 7)
-            compound_volatility = std_return * np.sqrt(timeframe_days / 7)
+        proba = model.predict_proba(latest_features)[0]
+        # Probability of UP assuming classes_ are [0, 1]
+        try:
+            class_index_for_up = list(model.classes_).index(1)
+        except ValueError:
+            class_index_for_up = 1  # fallback
+        p_up = float(proba[class_index_for_up])
+        p_down = 1.0 - p_up
+
+        # Build forward return distribution for this horizon
+        forward_returns = (features['Close'].shift(-closest_timeframe) / features['Close']) - 1.0
+        # Drop NaNs from the tail due to shift
+        forward_returns = forward_returns.dropna()
+
+        if not forward_returns.empty:
+            avg_up_return = forward_returns[forward_returns > 0].mean()
+            avg_down_return = forward_returns[forward_returns < 0].mean()
+            # Fallbacks if one side is missing
+            if np.isnan(avg_up_return) or avg_up_return is None:
+                avg_up_return = max(forward_returns.mean(), 0.0)
+            if np.isnan(avg_down_return) or avg_down_return is None:
+                avg_down_return = min(forward_returns.mean(), 0.0)
+            horizon_std = forward_returns.std()
         else:
-            compound_return = avg_return
-            compound_volatility = std_return
-        
-        if prediction == 1:
-            expected_return = compound_return
+            # Fallback to generic returns
+            avg_up_return = max(features['returns'].mean(), 0.0)
+            avg_down_return = min(features['returns'].mean(), 0.0)
+            horizon_std = features['returns'].std()
+
+        # Expected return as probability-weighted average of conditional means for model horizon
+        expected_return_model_horizon = (p_up * abs(avg_up_return)) + (p_down * avg_down_return)  # avg_down_return is negative
+
+        # Scale expected return and volatility from model horizon to requested timeframe
+        scale_factor = max(timeframe_days / float(closest_timeframe), 1e-6)
+        expected_return = expected_return_model_horizon * scale_factor
+        horizon_std = (horizon_std if horizon_std is not None and not np.isnan(horizon_std) else 0.0)
+        horizon_std = horizon_std * np.sqrt(scale_factor)
+
+        # Decision with abstention zone
+        if p_up >= 0.6:
             direction = "UP"
             arrow = "↗️"
-        else:
-            expected_return = -compound_return
+        elif p_up <= 0.4:
             direction = "DOWN"
             arrow = "↘️"
-        
+        else:
+            direction = "NEUTRAL"
+            arrow = "↔️"
+
         predicted_price = current_price * (1 + expected_return)
-        confidence_interval = compound_volatility * 1.96
+        confidence_interval = horizon_std * 1.96
         lower_bound = current_price * (1 + expected_return - confidence_interval)
         upper_bound = current_price * (1 + expected_return + confidence_interval)
-        
-        # Generate plain English forecast
-        if confidence > 0.7:
+
+        # Confidence text from maximum class probability
+        max_conf = max(p_up, p_down)
+        if max_conf > 0.7:
             confidence_text = "high confidence"
-        elif confidence > 0.5:
+        elif max_conf > 0.55:
             confidence_text = "moderate confidence"
         else:
             confidence_text = "low confidence"
-        
-        # Timeframe-specific descriptions
+
         timeframe_texts = {
             1: "tomorrow",
             3: "in 3 days",
@@ -387,14 +470,25 @@ def make_predictions(models, features, current_price, prediction_timeframe="7d")
             1825: "in 5 years"
         }
         time_text = timeframe_texts.get(timeframe_days, f"in {timeframe_days} days")
-        
-        percentage_change = abs(expected_return) * 100
-        plain_english = f"Our AI model predicts with {confidence_text} that the stock will move {direction.lower()} {arrow} by {percentage_change:.1f}% {time_text}, reaching ${predicted_price:.2f} (range: ${lower_bound:.2f} - ${upper_bound:.2f})."
-        
+
+        percentage_change = expected_return * 100
+        if direction == "NEUTRAL":
+            plain_english = (
+                f"Our AI model has {confidence_text} and suggests a neutral outlook {time_text}. "
+                f"Expected change is ~{percentage_change:.1f}%, with price around ${predicted_price:.2f} "
+                f"(range: ${lower_bound:.2f} - ${upper_bound:.2f})."
+            )
+        else:
+            plain_english = (
+                f"Our AI model predicts with {confidence_text} that the stock will move {direction.lower()} {arrow} "
+                f"by {abs(percentage_change):.1f}% {time_text}, reaching ${predicted_price:.2f} "
+                f"(range: ${lower_bound:.2f} - ${upper_bound:.2f})."
+            )
+
         predictions[prediction_timeframe] = {
             'direction': direction,
             'arrow': arrow,
-            'confidence': confidence,
+            'confidence': max_conf,
             'confidence_text': confidence_text,
             'predicted_price': predicted_price,
             'lower_bound': lower_bound,
@@ -402,10 +496,13 @@ def make_predictions(models, features, current_price, prediction_timeframe="7d")
             'expected_return': expected_return,
             'plain_english': plain_english,
             'timeframe_days': timeframe_days,
-            'percentage_change': percentage_change,
-            'model_used': closest_timeframe_str
+            'percentage_change': abs(percentage_change),
+            'model_used': closest_timeframe_str,
+            'current_price': current_price,
+            'p_up': p_up,
+            'p_down': p_down
         }
-    
+
     return predictions
 
 # Interactive chart
@@ -578,6 +675,9 @@ elif st.session_state.current_page == 'predictor':
     with st.sidebar:
         st.markdown("### ⚙️ Settings")
         
+        # Demo mode option
+        demo_mode = st.checkbox("🎮 Demo Mode (Use sample data if API fails)", value=False)
+        
         # Stock symbol with auto-replace functionality
         symbol = st.text_input("📊 Stock Symbol", value=st.session_state.selected_symbol, key="symbol_input").upper()
         
@@ -594,6 +694,7 @@ elif st.session_state.current_page == 'predictor':
         # Time period
         st.markdown("**⏰ Time Period:**")
         period_options = {
+            "📅 1 Day": "1d",
             "📅 6 Months": "6mo",
             "📅 1 Year": "1y", 
             "📅 2 Years": "2y",
@@ -605,6 +706,7 @@ elif st.session_state.current_page == 'predictor':
         # Prediction timeframes - Updated to your requested timeframes
         st.markdown("**🔮 Prediction Timeframes:**")
         prediction_timeframes = {
+            "📊 1 Day": "1d",
             "📊 1 Week": "7d",
             "📊 6 Months": "180d",
             "📊 1 Year": "365d",
@@ -653,8 +755,13 @@ elif st.session_state.current_page == 'predictor':
             
             data = get_stock_data(symbol, period=period)
             
-            if data is None:
-                st.error("Could not fetch stock data. Please try again.")
+            # If API fails and demo mode is enabled, use demo data
+            if data is None and demo_mode:
+                st.warning("⚠️ API rate limited. Using demo data for demonstration purposes.")
+                data = get_demo_data(symbol)
+                st.info("🎮 Demo Mode: Using sample data. Results are for demonstration only.")
+            elif data is None:
+                st.error("Could not fetch stock data. Please try again later or enable Demo Mode.")
                 st.stop()
             
             st.success(f"✅ Collected {len(data)} records for {symbol}")
@@ -715,6 +822,7 @@ elif st.session_state.current_page == 'predictor':
                         <div class="prediction-badge prediction-{pred['direction'].lower()}">
                             {pred['arrow']} {pred['direction']}
                         </div>
+                        <p><strong>Today's Price:</strong> ${pred['current_price']:.2f}</p>
                         <p><strong>Confidence:</strong> {pred['confidence']:.1%}</p>
                         <p><strong>Expected Price:</strong> ${pred['predicted_price']:.2f}</p>
                         <p><strong>Range:</strong> ${pred['lower_bound']:.2f} - ${pred['upper_bound']:.2f}</p>
@@ -738,15 +846,15 @@ elif st.session_state.current_page == 'predictor':
             
             st.success("🎉 Advanced analysis complete!")
             st.balloons()
-            
+
         except Exception as e:
             st.error(f"❌ Error during analysis: {str(e)}")
             st.exception(e)
 
-    # Information section
+# Information section
     else:
         st.markdown("### 📚 How to Use")
-        
+
         st.markdown("""
         **🚀 Pro Features Guide**
         
@@ -754,29 +862,29 @@ elif st.session_state.current_page == 'predictor':
         - 1 Week to 5 Years: Choose from 5 different prediction timeframes
         - Confidence Intervals: See expected price ranges
         - Plain English: Easy-to-understand forecasts
-        
+
         **📈 Interactive Charts**
         - Zoom & Pan: Explore price data in detail
         - Technical Indicators: Overlay moving averages
         - Candlestick View: Professional trading chart format
-        
+
         **⭐ Watchlist Management**
         - Save Favorites: Add stocks to your personal watchlist
         - Quick Access: Analyze multiple stocks efficiently
         - Portfolio Tracking: Monitor your selected stocks
-        
+
         **🎯 How to Use**
-        
+
         1. **📊 Enter a stock symbol** (e.g., AAPL, MSFT, GOOGL)
         2. **⏰ Select time period** for analysis
-        3. **🔮 Choose prediction timeframe** (1 week to 5 years)
+        3. **🔮 Choose prediction timeframe** (1 day to 5 years)
         4. **⭐ Add to watchlist** for easy access
         5. **🚀 Run advanced analysis** for comprehensive predictions
         6. **📈 Explore interactive charts** and technical indicators
         7. **🔮 View predictions** with confidence intervals
-        
+
         **⚠️ Disclaimer**
-        
+
         This tool is for educational purposes only. Past performance does not guarantee future results. 
         Always do your own research before making investment decisions.
         """)
