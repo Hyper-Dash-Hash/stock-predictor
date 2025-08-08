@@ -170,6 +170,7 @@ def get_css(dark_mode=False):
             }
             .glass-card h2 { color: #fff !important; text-shadow: 0 2px 6px rgba(0,0,0,0.6); margin-bottom: 0.5rem; }
             .glass-card p { color: #f2f2f2 !important; opacity: 0.95; }
+            .parallax-0 { background-image: url('https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=2000&q=60'); }
             .parallax-1 { background-image: url('https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=2000&q=60'); }
             .parallax-2 { background-image: url('https://images.unsplash.com/photo-1518182170549-3c07fd8e8b52?auto=format&fit=crop&w=2000&q=60'); }
         </style>
@@ -318,6 +319,7 @@ def get_css(dark_mode=False):
             }
             .glass-card h2 { color: #222 !important; margin-bottom: 0.5rem; }
             .glass-card p { color: #333 !important; }
+            .parallax-0 { background-image: url('https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=2000&q=60'); }
             .parallax-1 { background-image: url('https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=2000&q=60'); }
             .parallax-2 { background-image: url('https://images.unsplash.com/photo-1518182170549-3c07fd8e8b52?auto=format&fit=crop&w=2000&q=60'); }
         </style>
@@ -659,17 +661,29 @@ def remove_from_watchlist(symbol):
 
 # Home Page
 if st.session_state.current_page == 'home':
+    # Top parallax welcome section
     st.markdown("""
-    <div class="hero-section">
-        <h1 style="font-size: 3.5rem; margin-bottom: 1rem;">🚀 AI Stock Predictor Pro</h1>
-        <p style="font-size: 1.2rem; margin-bottom: 1.5rem;">Advanced AI predictions with multiple timeframes and interactive charts</p>
-        <div>
-            <a href="#launch" style="text-decoration:none;">
-                <button style="padding: 0.9rem 1.3rem; border-radius: 10px; border: none; background: #ffffff; color: #4a4a4a; font-weight: 700; cursor: pointer; box-shadow: 0 6px 20px rgba(0,0,0,0.15);">🚀 Launch Pro Predictor</button>
-            </a>
+    <div class="parallax-section parallax-0">
+      <div class="content">
+        <div class="glass-card">
+          <h2>AI Stock Predictor Pro</h2>
+          <p>Beautiful forecasts, interactive charts, and smart insights. Built for clarity and speed.</p>
         </div>
+      </div>
     </div>
     """, unsafe_allow_html=True)
+
+    # Subtle hero strip + primary launcher
+    st.markdown("""
+    <div class="hero-section">
+        <h1 style="font-size: 3.0rem; margin-bottom: 0.6rem;">🚀 AI Stock Predictor Pro</h1>
+        <p style="font-size: 1.1rem; margin-bottom: 1.2rem;">Advanced AI predictions with multiple timeframes and interactive charts</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Top primary launcher (single, reliable button)
+    if st.button("🚀 Launch Pro Predictor", type="primary", use_container_width=True):
+        navigate_to('predictor')
     
     # Dark mode toggle
     col1, col2, col3 = st.columns([1, 2, 1])
@@ -720,31 +734,10 @@ if st.session_state.current_page == 'home':
         <div class="glass-card">
           <h2>Welcome aboard</h2>
           <p>Navigate markets with a beautiful, modern AI copilot. Predictions, charts, and insights—built for clarity.</p>
-          <div style="margin-top:1rem;">
-            <a href="#" onclick="window.parent.postMessage({type: 'streamlitNavigatePredictor'}, '*'); return false;" style="text-decoration:none;">
-              <button style="padding: 0.9rem 1.3rem; border-radius: 10px; border: none; background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; font-weight: 700; cursor: pointer; box-shadow: 0 10px 30px rgba(102,126,234,0.35);">🚀 Launch Pro Predictor</button>
-            </a>
-          </div>
         </div>
       </div>
     </div>
     """, unsafe_allow_html=True)
-
-    # Inline JS bridge to navigate from the hero button
-    st.markdown("""
-    <script>
-      window.addEventListener('message', (event) => {
-        if (event?.data?.type === 'streamlitNavigatePredictor') {
-          const el = window.parent.document.querySelector('iframe[src*="streamlit"]') || window.parent;
-          // Fallback: trigger a click by calling Streamlit via hash (no-op in sandbox). We'll back this with a Python button below.
-        }
-      });
-    </script>
-    """, unsafe_allow_html=True)
-
-    # Fallback button (works in Streamlit sandbox)
-    if st.button("🚀 Launch Pro Predictor", type="primary"):
-        navigate_to('predictor')
     
     # Parallax Feature highlight
     st.markdown("""
