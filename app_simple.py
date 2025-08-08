@@ -32,8 +32,14 @@ def get_css(dark_mode=False):
     if dark_mode:
         return """
         <style>
-            .main { background-color: #1a1a1a; color: #ffffff; }
-            .stApp { background-color: #1a1a1a; }
+            .main { background-color: #0f1220; color: #ffffff; }
+            .stApp {
+                background-color: #0f1220;
+                background-image: linear-gradient(rgba(10,12,20,0.85), rgba(10,12,20,0.85)), url('https://images.unsplash.com/photo-1551836022-deb4988cc6c5?auto=format&fit=crop&w=2000&q=60');
+                background-attachment: fixed;
+                background-size: cover;
+                background-position: center;
+            }
             .css-1d391kg { background-color: #2d2d2d; }
             
             .hero-section {
@@ -117,11 +123,66 @@ def get_css(dark_mode=False):
                 background: linear-gradient(135deg, #EF5350, #F44336);
                 color: white;
             }
+
+            /* Parallax sections */
+            .parallax-section {
+                position: relative;
+                background-attachment: fixed;
+                background-size: cover;
+                background-position: center;
+                min-height: 55vh;
+                border-radius: 24px;
+                margin: 3rem 0;
+                overflow: hidden;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+            }
+            .parallax-section::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background: radial-gradient( circle at 20% 10%, rgba(102,126,234,0.35), transparent 45%),
+                            radial-gradient( circle at 80% 80%, rgba(118,75,162,0.35), transparent 45%),
+                            linear-gradient(rgba(10,12,20,0.5), rgba(10,12,20,0.7));
+                z-index: 1;
+            }
+            .parallax-section .content {
+                position: relative;
+                z-index: 2;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 55vh;
+                padding: 3rem;
+                text-align: center;
+            }
+            .glass-card {
+                background: rgba(255,255,255,0.06);
+                border: 1px solid rgba(255,255,255,0.18);
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
+                border-radius: 20px;
+                padding: 2rem 2.5rem;
+                color: #fff;
+                max-width: 900px;
+                width: 95%;
+                margin: 0 auto;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.35);
+            }
+            .glass-card h2 { color: #fff !important; text-shadow: 0 2px 6px rgba(0,0,0,0.6); margin-bottom: 0.5rem; }
+            .glass-card p { color: #f2f2f2 !important; opacity: 0.95; }
+            .parallax-1 { background-image: url('https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=2000&q=60'); }
+            .parallax-2 { background-image: url('https://images.unsplash.com/photo-1518182170549-3c07fd8e8b52?auto=format&fit=crop&w=2000&q=60'); }
         </style>
         """
     else:
         return """
         <style>
+            .stApp {
+                background-image: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url('https://images.unsplash.com/photo-1551836022-deb4988cc6c5?auto=format&fit=crop&w=2000&q=60');
+                background-attachment: fixed;
+                background-size: cover;
+                background-position: center;
+            }
             .hero-section {
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 padding: 4rem 2rem;
@@ -212,6 +273,53 @@ def get_css(dark_mode=False):
                 background: linear-gradient(135deg, #EF5350, #F44336);
                 color: white;
             }
+
+            /* Parallax sections */
+            .parallax-section {
+                position: relative;
+                background-attachment: fixed;
+                background-size: cover;
+                background-position: center;
+                min-height: 55vh;
+                border-radius: 24px;
+                margin: 3rem 0;
+                overflow: hidden;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            }
+            .parallax-section::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(rgba(102,126,234,0.25), rgba(118,75,162,0.25));
+                z-index: 1;
+            }
+            .parallax-section .content {
+                position: relative;
+                z-index: 2;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 55vh;
+                padding: 3rem;
+                text-align: center;
+            }
+            .glass-card {
+                background: rgba(255,255,255,0.65);
+                border: 1px solid rgba(255,255,255,0.35);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                border-radius: 20px;
+                padding: 2rem 2.5rem;
+                color: #222;
+                max-width: 900px;
+                width: 95%;
+                margin: 0 auto;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+            }
+            .glass-card h2 { color: #222 !important; margin-bottom: 0.5rem; }
+            .glass-card p { color: #333 !important; }
+            .parallax-1 { background-image: url('https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=2000&q=60'); }
+            .parallax-2 { background-image: url('https://images.unsplash.com/photo-1518182170549-3c07fd8e8b52?auto=format&fit=crop&w=2000&q=60'); }
         </style>
         """
 
@@ -554,9 +662,12 @@ if st.session_state.current_page == 'home':
     st.markdown("""
     <div class="hero-section">
         <h1 style="font-size: 3.5rem; margin-bottom: 1rem;">🚀 AI Stock Predictor Pro</h1>
-        <p style="font-size: 1.5rem; margin-bottom: 2rem;">
-            Advanced AI predictions with multiple timeframes and interactive charts
-        </p>
+        <p style="font-size: 1.2rem; margin-bottom: 1.5rem;">Advanced AI predictions with multiple timeframes and interactive charts</p>
+        <div>
+            <a href="#launch" style="text-decoration:none;">
+                <button style="padding: 0.9rem 1.3rem; border-radius: 10px; border: none; background: #ffffff; color: #4a4a4a; font-weight: 700; cursor: pointer; box-shadow: 0 6px 20px rgba(0,0,0,0.15);">🚀 Launch Pro Predictor</button>
+            </a>
+        </div>
     </div>
     """, unsafe_allow_html=True)
     
@@ -602,15 +713,51 @@ if st.session_state.current_page == 'home':
         </div>
         """, unsafe_allow_html=True)
     
-    # CTA Section
-    st.markdown("---")
+    # Parallax Welcome and CTA (top)
+    st.markdown("""
+    <div id="launch" class="parallax-section parallax-1">
+      <div class="content">
+        <div class="glass-card">
+          <h2>Welcome aboard</h2>
+          <p>Navigate markets with a beautiful, modern AI copilot. Predictions, charts, and insights—built for clarity.</p>
+          <div style="margin-top:1rem;">
+            <a href="#" onclick="window.parent.postMessage({type: 'streamlitNavigatePredictor'}, '*'); return false;" style="text-decoration:none;">
+              <button style="padding: 0.9rem 1.3rem; border-radius: 10px; border: none; background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; font-weight: 700; cursor: pointer; box-shadow: 0 10px 30px rgba(102,126,234,0.35);">🚀 Launch Pro Predictor</button>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Inline JS bridge to navigate from the hero button
+    st.markdown("""
+    <script>
+      window.addEventListener('message', (event) => {
+        if (event?.data?.type === 'streamlitNavigatePredictor') {
+          const el = window.parent.document.querySelector('iframe[src*="streamlit"]') || window.parent;
+          // Fallback: trigger a click by calling Streamlit via hash (no-op in sandbox). We'll back this with a Python button below.
+        }
+      });
+    </script>
+    """, unsafe_allow_html=True)
+
+    # Fallback button (works in Streamlit sandbox)
+    if st.button("🚀 Launch Pro Predictor", type="primary"):
+        navigate_to('predictor')
     
-    col1, col2, col3 = st.columns([1, 2, 1])
-    
-    with col2:
-        if st.button("🚀 Launch Pro Predictor", type="primary", use_container_width=True):
-            navigate_to('predictor')
-    
+    # Parallax Feature highlight
+    st.markdown("""
+    <div class="parallax-section parallax-2">
+      <div class="content">
+        <div class="glass-card">
+          <h2>Beautiful, fast, and insightful</h2>
+          <p>Candlesticks, moving averages, and AI-powered signals—presented with clarity and intent.</p>
+        </div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+
     # Stats Section
     st.markdown("### 📊 Mission Statistics")
     
